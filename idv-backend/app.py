@@ -144,9 +144,12 @@ def _preprocess_image(image):
     image = ImageOps.autocontrast(image)
     image = image.filter(ImageFilter.SHARPEN)
     width, height = image.size
-    scale = 2 if max(width, height) < 1200 else 1
-    if scale != 1:
-        image = image.resize((width * scale, height * scale))
+    max_dim = 1600
+    if max(width, height) > max_dim:
+        scale = max_dim / float(max(width, height))
+        image = image.resize((int(width * scale), int(height * scale)))
+    elif max(width, height) < 900:
+        image = image.resize((width * 2, height * 2))
     return image
 
 
