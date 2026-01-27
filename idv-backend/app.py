@@ -48,6 +48,22 @@ DOB_LABELS = [
     "data da naschientscha",
 ]
 
+_DIGIT_FIX_MAP = str.maketrans({
+    "O": "0",
+    "Q": "0",
+    "D": "0",
+    "I": "1",
+    "L": "1",
+    "Z": "2",
+    "S": "5",
+    "B": "8",
+    "G": "6",
+})
+
+
+def _normalize_digits(text):
+    return text.upper().translate(_DIGIT_FIX_MAP)
+
 
 def _parse_date_parts(parts):
     try:
@@ -96,7 +112,8 @@ def _extract_dob(text):
         return mrz_dob
 
     # Heuristic: parse any 6-digit (YYMMDD) or 8-digit (DDMMYYYY) sequences
-    compact = re.sub(r"[^0-9]", " ", text)
+    normalized_digits = _normalize_digits(text)
+    compact = re.sub(r"[^0-9]", " ", normalized_digits)
     for match in re.finditer(r"\b\d{8}\b", compact):
         raw = match.group(0)
         for pattern in (r"(\d{2})(\d{2})(\d{4})", r"(\d{4})(\d{2})(\d{2})"):
