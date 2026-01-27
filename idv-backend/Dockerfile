@@ -1,7 +1,11 @@
 FROM python:3.11-slim
 
 RUN apt-get update \
-  && apt-get install -y --no-install-recommends tesseract-ocr \
+  && apt-get install -y --no-install-recommends \
+    tesseract-ocr \
+    tesseract-ocr-deu \
+    tesseract-ocr-fra \
+    tesseract-ocr-ita \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

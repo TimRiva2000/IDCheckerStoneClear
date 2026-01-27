@@ -7,7 +7,7 @@ from flask import Flask, jsonify, request
 from flask_cors import CORS
 
 try:
-    from PIL import Image
+    from PIL import Image, ImageOps, ImageFilter
 except Exception:
     Image = None
 
@@ -28,8 +28,17 @@ MIN_AGE = int(os.getenv("MIN_AGE", "18"))
 MOCK_VERIFIED = os.getenv("MOCK_VERIFIED", "false").lower() in ("1", "true", "yes")
 
 DATE_PATTERNS = [
-    r"\b(\d{2})[./-](\d{2})[./-](\d{4})\b",  # DD/MM/YYYY or MM/DD/YYYY
+    r"\b(\d{2})[./-](\d{2})[./-](\d{4})\b",  # DD.MM.YYYY or MM/DD/YYYY
+    r"\b(\d{2})\s+(\d{2})\s+(\d{4})\b",      # DD MM YYYY
     r"\b(\d{4})[./-](\d{2})[./-](\d{2})\b",  # YYYY-MM-DD
+]
+
+DOB_LABELS = [
+    "date of birth",
+    "geburtsdatum",
+    "date de naissance",
+    "data di nascita",
+    "data da naschientscha",
 ]
 
 
@@ -44,10 +53,55 @@ def _parse_date_parts(parts):
         return None
 
 
+def _extract_mrz_dob(lines):
+    mrz_lines = [line for line in lines if line.count("<") >= 5 and len(line.replace(" ", "")) >= 28]
+    if len(mrz_lines) < 2:
+        return None
+    mrz_lines = [line.replace(" ", "") for line in mrz_lines][-3:]
+    line2 = mrz_lines[1] if len(mrz_lines) >= 2 else None
+    if not line2 or len(line2) < 20:
+        return None
+    # ICAO 9303 ID-1: birth date is at positions 14-19 (1-based) on line 2
+    dob_raw = line2[13:19]
+    if not re.fullmatch(r"\d{6}", dob_raw or ""):
+        return None
+    yy = int(dob_raw[0:2])
+    mm = int(dob_raw[2:4])
+    dd = int(dob_raw[4:6])
+    today = date.today()
+    century = 1900 if yy > today.year % 100 else 2000
+    try:
+        return date(century + yy, mm, dd)
+    except Exception:
+        return None
+
+
 def _extract_dob(text):
     if not text:
         return None
 
+    normalized = text.replace("\r", "\n")
+    lines = [line.strip() for line in normalized.split("\n") if line.strip()]
+
+    # Try MRZ first (more reliable on Swiss IDs)
+    mrz_dob = _extract_mrz_dob(lines)
+    if mrz_dob:
+        return mrz_dob
+
+    # Look for DOB labels and scan nearby lines
+    for idx, line in enumerate(lines):
+        lower = line.lower()
+        if any(label in lower for label in DOB_LABELS):
+            nearby = " ".join(lines[idx: idx + 3])
+            for pattern in DATE_PATTERNS:
+                match = re.search(pattern, nearby)
+                if match:
+                    parsed = _parse_date_parts(match.groups())
+                    if isinstance(parsed, tuple):
+                        parsed = parsed[0]
+                    return parsed
+
+    # Fallback: any plausible date in the text
     candidates = []
     for pattern in DATE_PATTERNS:
         for match in re.finditer(pattern, text):
@@ -72,7 +126,6 @@ def _extract_dob(text):
     if not filtered:
         return None
 
-    # Choose the oldest plausible date as DOB
     return sorted(filtered)[0]
 
 
@@ -84,12 +137,28 @@ def _calculate_age(dob):
     return years
 
 
+def _preprocess_image(image):
+    # Light preprocessing to improve OCR on IDs
+    image = ImageOps.exif_transpose(image)
+    image = image.convert("L")
+    image = ImageOps.autocontrast(image)
+    image = image.filter(ImageFilter.SHARPEN)
+    width, height = image.size
+    scale = 2 if max(width, height) < 1200 else 1
+    if scale != 1:
+        image = image.resize((width * scale, height * scale))
+    return image
+
+
 def _run_ocr(image_bytes):
     if pytesseract is None or Image is None:
         return ""
     try:
         image = Image.open(io.BytesIO(image_bytes))
-        return pytesseract.image_to_string(image)
+        image = _preprocess_image(image)
+        config = "--oem 3 --psm 6"
+        # Requires language packs installed in Dockerfile
+        return pytesseract.image_to_string(image, lang="eng+deu+fra+ita", config=config)
     except Exception:
         return ""
 
