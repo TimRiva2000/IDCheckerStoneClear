@@ -38,6 +38,8 @@ DATE_PATTERNS = [
     r"\b(\d{4})[./-](\d{2})[./-](\d{2})\b",  # YYYY-MM-DD
     r"\b(\d{2})(\d{2})(\d{4})\b",            # DDMMYYYY
     r"\b(\d{4})(\d{2})(\d{2})\b",            # YYYYMMDD
+    r"\b(\d{2})\s+(\d{4})\b",                # MM YYYY (or DD YYYY on older IDs)
+    r"\b(\d{4})\b",                          # YYYY
 ]
 
 DOB_LABELS = [
@@ -152,6 +154,28 @@ def _extract_dob(text):
         if filtered:
             return sorted(filtered)[0]
 
+    # Handle MM YYYY or bare YYYY (older IDs sometimes show month/year)
+    for match in re.finditer(r"\b(\d{2})\s+(\d{4})\b", compact):
+        mm = int(match.group(1))
+        yyyy = int(match.group(2))
+        try:
+            candidate = date(yyyy, mm, 1)
+            today = date.today()
+            if candidate <= today and candidate.year >= today.year - 120:
+                return candidate
+        except Exception:
+            continue
+
+    for match in re.finditer(r"\b(\d{4})\b", compact):
+        yyyy = int(match.group(1))
+        try:
+            candidate = date(yyyy, 1, 1)
+            today = date.today()
+            if candidate <= today and candidate.year >= today.year - 120:
+                return candidate
+        except Exception:
+            continue
+
     # Look for DOB labels and scan nearby lines
     for idx, line in enumerate(lines):
         lower = line.lower()
@@ -228,12 +252,18 @@ def _run_mrz_ocr(image):
     except Exception:
         return ""
 
+def _looks_like_mrz(text):
+    if not text:
+        return False
+    cleaned = text.replace(" ", "")
+    return cleaned.count("<") >= 5 and len(cleaned) >= 28
+
 def _run_dob_ocr(image):
     width, height = image.size
     crop_top = int(height * DOB_CROP_RATIO)
     region = image.crop((0, crop_top, width, height))
     region = _preprocess_image(region)
-    config = "--oem 3 --psm 6 -c tessedit_char_whitelist=0123456789./- "
+    config = "--oem 3 --psm 6"
     try:
         return pytesseract.image_to_string(region, lang="eng", config=config)
     except Exception:
@@ -245,7 +275,7 @@ def _run_ocr_with_debug(image_bytes):
     try:
         image = Image.open(io.BytesIO(image_bytes))
         mrz_text = _run_mrz_ocr(image)
-        if mrz_text:
+        if _looks_like_mrz(mrz_text):
             return mrz_text, {"mrz_text": mrz_text}
         dob_text = _run_dob_ocr(image)
         if dob_text:
