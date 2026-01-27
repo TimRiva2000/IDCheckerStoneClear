@@ -1,11 +1,10 @@
 services:
   - type: web
     name: idv-ocr
-    env: python
+    env: docker
     rootDir: idv-backend
     plan: free
-    buildCommand: "apt-get update && apt-get install -y tesseract-ocr && pip install -r requirements.txt"
-    startCommand: "gunicorn app:app"
+    dockerfilePath: Dockerfile
     envVars:
       - key: MIN_AGE
         value: "18"
