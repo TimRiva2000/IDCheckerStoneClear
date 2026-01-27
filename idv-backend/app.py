@@ -114,30 +114,43 @@ def _extract_dob(text):
     # Heuristic: parse any 6-digit (YYMMDD) or 8-digit (DDMMYYYY) sequences
     normalized_digits = _normalize_digits(text)
     compact = re.sub(r"[^0-9]", " ", normalized_digits)
-    for match in re.finditer(r"\b\d{8}\b", compact):
-        raw = match.group(0)
-        for pattern in (r"(\d{2})(\d{2})(\d{4})", r"(\d{4})(\d{2})(\d{2})"):
-            m = re.match(pattern, raw)
-            if m:
-                parsed = _parse_date_parts(m.groups())
-                if isinstance(parsed, tuple):
-                    parsed = parsed[0]
-                if parsed:
-                    return parsed
+    digit_runs = re.findall(r"\d{6,}", compact)
+    candidates = []
+    for run in digit_runs:
+        # Slide windows for 8-digit and 6-digit sequences within longer runs
+        for size in (8, 6):
+            if len(run) < size:
+                continue
+            for i in range(0, len(run) - size + 1):
+                chunk = run[i:i + size]
+                if size == 8:
+                    for pattern in (r"(\d{2})(\d{2})(\d{4})", r"(\d{4})(\d{2})(\d{2})"):
+                        m = re.match(pattern, chunk)
+                        if m:
+                            parsed = _parse_date_parts(m.groups())
+                            if isinstance(parsed, tuple):
+                                parsed = parsed[0]
+                            if parsed:
+                                candidates.append(parsed)
+                else:
+                    yy = int(chunk[0:2])
+                    mm = int(chunk[2:4])
+                    dd = int(chunk[4:6])
+                    today = date.today()
+                    century = 1900 if yy > today.year % 100 else 2000
+                    try:
+                        candidates.append(date(century + yy, mm, dd))
+                    except Exception:
+                        continue
 
-    for match in re.finditer(r"\b\d{6}\b", compact):
-        raw = match.group(0)
-        yy = int(raw[0:2])
-        mm = int(raw[2:4])
-        dd = int(raw[4:6])
+    if candidates:
         today = date.today()
-        century = 1900 if yy > today.year % 100 else 2000
-        try:
-            candidate = date(century + yy, mm, dd)
-            if candidate <= today and candidate.year >= today.year - 120:
-                return candidate
-        except Exception:
-            continue
+        filtered = [
+            c for c in candidates
+            if c <= today and c.year >= today.year - 120
+        ]
+        if filtered:
+            return sorted(filtered)[0]
 
     # Look for DOB labels and scan nearby lines
     for idx, line in enumerate(lines):
