@@ -1,0 +1,55 @@
+<div class="js-collection-item text-align--center" {{ shopify_attributes }}>
+
+	<a href="{{ collection.url | escape }}" title="{{ collection.title | escape }}">
+	
+		<div 
+			class="card__image"
+			style="padding-top:{{ 100 | divided_by: section.settings.image_aspect_ratio }}%"
+		>
+			{%- liquid
+				
+				unless image == blank
+					assign collection_image = image
+				else
+					assign collection_image = collection.featured_image
+				endunless
+
+				if image_border_radius > 0 
+					assign image_class = 'lazy-image--zoom-animation lazy-image--to-reveal'
+				else
+					assign image_class = 'lazy-image--animation lazy-image--to-reveal'
+				endif
+
+        if section.index == 1 and index <= 2
+          assign preload = true
+        else
+          assign preload = false
+        endif
+				
+				unless collection_image == blank 
+					render 'lazy-image', image: collection_image, type: 'background', alt: collection.title, sizes: sizes, ratio: image_aspect_ratio, class: image_class, preload: preload
+				else
+					assign no = index | modulo: 6 | plus: 1
+					echo 'collection-X' | replace: 'X', no | placeholder_svg_tag
+				endunless 
+
+			-%}
+		</div>
+
+		<div class="gutter-top--regular spacing--xsmall remove-empty-space">
+			<span class="text-line-height--medium">
+				<span class="text-size--regular text-weight--medium text-animation--underline-thin">
+					{%- liquid
+						unless collection.title == blank
+							echo collection.title | escape
+						else
+							echo 'general.onboarding.collection_title' | t
+						endunless
+					-%}
+				</span>
+			</span>
+		</div>
+
+	</a>
+
+</div>

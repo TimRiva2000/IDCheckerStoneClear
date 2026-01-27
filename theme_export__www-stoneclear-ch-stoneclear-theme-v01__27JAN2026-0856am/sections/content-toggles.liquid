@@ -1,0 +1,523 @@
+{{ 'component-toggle.css' | asset_url | stylesheet_tag }}
+
+<div class="container--large container--vertical-space{% if section.settings.gutter_decrease %}-small{% endif %}">
+
+  {%- render 'section-heading', heading: section.settings.heading, subheading: section.settings.subheading, heading_size: section.settings.section_heading_size, section_layout: section.settings.section_heading_layout, button: section.settings.cta_label, button_label: section.settings.cta_label, link: section.settings.cta_url, seo_h_tag: section.settings.seo_h_tag -%}
+
+  <div class="{%- if section.settings.form_enable -%} faq-layout grid--no-stretch {%- endif -%}">
+
+    <div class="faq-items">
+      <div>
+        {%- if section.blocks.size > 0 -%}
+          <toggle-group>
+            {%- for block in section.blocks -%}
+              <toggle-tab class="toggle toggle--faq {% if forloop.index == 1 and section.settings.open_first %}opened{% endif %}" 
+                data-togglepack-alternate
+                {{ block.shopify_attributes }}
+              >
+
+                <div class="toggle__title" data-js-title tabindex="0" aria-expanded="false" role="button" aria-controls="toggle-{{ block.id }}">
+                  
+                  <div class="toggle__heading">
+
+                    <span class="text-weight--bold">{{ block.settings.title | escape }}</span>
+                
+                    {%- if block.settings.subtitle != empty or block.settings.icon != 'no-icon' -%}
+                      <div class="toggle__subtitle">
+                        {%- liquid
+                          if block.settings.icon != 'no-icon'
+                            render 'icon-pack', icon: block.settings.icon
+                          endif 
+                        -%}
+                        {%- unless block.settings.subtitle == blank -%}
+                          <span class="text-size--small">{{ block.settings.subtitle | escape }}</span>
+                        {%- endunless -%}
+                      </div>
+                    {%- endif -%}
+
+                  </div>
+
+                  {%- if block.settings.button_label != blank -%}
+                    <a href="{{ block.settings.button_link }}" class="pill pill--large pill--outline">{{ block.settings.button_label | escape }}</a>
+                  {%- endif -%}
+
+                </div>
+
+                <div id="toggle-{{ block.id }}" data-js-content class="toggle__content rte remove-empty-space" role="region">
+                  
+                  {{ block.settings.body }}
+
+                  {%- unless block.settings.image == blank -%}
+                    {%- if section.settings.form_enable -%}
+                      {%- capture sizes %}
+                        sizes="(max-width: 1023px) calc(100vw - 100px), (max-width: {{ settings.theme_max_width }}px) 60vw, {{ settings.theme_max_width | divided_by: 2 | plus: 100 }}px"
+                      {%- endcapture -%}
+                    {%- else -%}
+                      {%- capture sizes %}
+                        sizes="(max-width: 1023px) calc(100vw - 100px), (max-width: {{ settings.theme_max_width }}px) calc(100vw - 150px), {{ settings.theme_max_width | minus: 160 }}px"
+                      {%- endcapture -%}
+                    {%- endif -%}
+                    {%- render 'lazy-image', image: block.settings.image, alt: block.settings.title, sizes: sizes, class: 'element--border-radius' -%}
+                  {%- endunless -%}
+                </div>
+
+              </toggle-tab>
+            {%- endfor -%}
+          </toggle-group>
+        {%- endif -%}
+      </div>
+    </div>
+
+    {%- if section.settings.form_enable -%}
+
+      <div class="contact-cell sidebar-widget sidebar-widget--{{ section.settings.style }} element--is-sticky">
+
+        <span class="sidebar-widget__title">{{ section.settings.form_title | escape }}</span>
+
+        <div class="sidebar-widget__content">
+
+          {%- assign form_id = 'contact-' | append: section.id -%}
+          {%- form 'contact', id: form_id, class: 'isolate' -%}
+
+            {%- liquid 
+              if form.posted_successfully?
+                assign message = 'general.contact_form.success_message' | t
+                render 'form-success', message: message
+              elsif form.errors
+                render 'form-errors', form: form
+              endif
+            -%}
+            
+            <div class="contact__fields">
+              
+              <div class="contact-form__row">
+                <label for="{{ form_id }}-name" class="visually-hidden">{{ 'general.contact_form.name_label' | t }}</label>
+                <input class="field__input" autocomplete="name" type="text" id="{{ form_id }}-name" name="contact[{{ 'general.contact_form.name_label' | t }}]" value="{% if form.name %}{{ form.name }}{% elsif customer %}{{ customer.name }}{% endif %}" placeholder="{{ 'general.contact_form.name_label' | t }}">
+              </div>
+
+              <div class="contact-form__row">
+                <label for="{{ form_id }}-email" class="visually-hidden">{{ 'general.contact_form.email_label' | t }}</label>
+                <input
+                  autocomplete="email"
+                  type="email"
+                  id="{{ form_id }}-email"
+                  class="field__input"
+                  name="contact[email]"
+                  spellcheck="false"
+                  autocapitalize="off"
+                  value="{% if form.email %}{{ form.email }}{% elsif customer %}{{ customer.email }}{% endif %}"
+                  aria-required="true"
+                  {% if form.errors contains 'email' %}
+                    aria-invalid="true"
+                    aria-describedby="{{ form_id }}-email-error"
+                  {% endif %}
+                  placeholder="{{ 'general.contact_form.email_label' | t }}"
+                >
+              </div>
+
+              <div class="contact-form__row">
+                <label for="{{ form_id }}-body" class="visually-hidden">{{ 'general.contact_form.message_label' | t }}</label>
+                <textarea
+                  rows="10"
+                  id="{{ form_id }}-body"
+                  class="text-area field__input"
+                  name="contact[{{ 'general.contact_form.message_label' | t }}]"
+                  placeholder="{{ 'general.contact_form.message_label' | t }}"
+                >{{ form.body }}</textarea>
+              </div>
+
+              <div class="contact-form__row">
+                <button type="submit" class="button button--large button--solid">
+                  {{ 'general.contact_form.submit_label' | t }}
+                </button>
+              </div>
+
+            </div>
+            
+          {%- endform -%}
+
+        </div>
+
+      </div>
+
+    {%- endif -%}
+
+  </div>
+  
+  {%- render 'section-footer', button: section.settings.cta_label, button_label: section.settings.cta_label, link: section.settings.cta_url -%}
+  
+</div>
+
+<script src="{{ 'component-toggle.js' | asset_url }}" defer></script>
+
+{% schema %}
+	{
+    "name": "t:sections.local-extra-words.sections.content-toggles.name",
+    "class": "mount-toggles",
+		"settings": [
+      {
+        "type": "header",
+        "content": "t:sections.bundle-extra-words.sections.headings.name"
+      },
+      {
+        "type": "text",
+        "id": "heading",
+        "label": "t:sections.local-extra-words.sections.headings.heading",
+        "default": "FAQ"
+      },
+      {
+        "type": "inline_richtext",
+        "id": "subheading",
+        "label": "t:sections.local-extra-words.sections.headings.subheading",
+        "default": "Share your <strong>best</strong> answers"
+      },
+      {
+        "type": "select",
+        "id": "section_heading_size",
+        "label": "t:sections.bundle-extra-words.sections.headings.size.label",
+        "options": [
+          {
+            "value": "text-size--regular",
+            "label": "t:sections.bundle-extra-words.sections.headings.size.option_1"
+          },
+          {
+            "value": "text-size--large",
+            "label": "t:sections.bundle-extra-words.sections.headings.size.option_2"
+          }
+        ],
+        "default": "text-size--regular"
+      },
+      {
+        "type": "select",
+        "id": "section_heading_layout",
+        "label": "t:sections.bundle-extra-words.sections.headings.alignment.label",
+        "options": [
+          {
+            "value": "section-heading--left section-heading--one-row",
+            "label": "t:sections.bundle-extra-words.sections.headings.alignment.option_1",
+            "group": "t:sections.bundle-extra-words.sections.headings.layout.option_1"
+          },
+          {
+            "value": "section-heading--left section-heading--two-rows",
+            "label": "t:sections.bundle-extra-words.sections.headings.alignment.option_1",
+            "group": "t:sections.bundle-extra-words.sections.headings.layout.option_2"
+          },
+          {
+            "value": "section-heading--center section-heading--two-rows",
+            "label": "t:sections.bundle-extra-words.sections.headings.alignment.option_2",
+            "group": "t:sections.bundle-extra-words.sections.headings.layout.option_2"
+          }
+        ],
+        "default": "section-heading--left section-heading--one-row"
+      },
+      {
+        "type": "text",
+        "id": "cta_label",
+        "label": "t:sections.bundle-extra-words.settings_schema.labels.button_text"
+      },
+      {
+        "type": "url",
+        "id": "cta_url",
+        "label": "t:sections.bundle-extra-words.settings_schema.labels.button_url"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.local-extra-words.sections.faq.settings.form.header"
+      },
+			{
+				"type": "checkbox",
+				"id": "form_enable",
+				"label": "t:sections.local-extra-words.sections.faq.settings.form.show",
+        "default": false
+			},
+      {
+        "type": "text",
+        "id": "form_title",
+        "label": "t:sections.local-extra-words.sections.faq.settings.form.title",
+        "default": "Contact form"
+      },
+
+      { 
+        "type": "select",
+        "id": "style",
+        "label": "t:sections.bundle-extra-words.settings_schema.labels.container_design",
+        "options": [
+          {
+            "value": "outline",
+            "label": "t:sections.bundle-extra-words.settings_schema.labels.options.option_3"
+          },
+          {
+            "value": "primary",
+            "label": "t:sections.bundle-extra-words.settings_schema.labels.options.option_4"
+          }
+        ],
+        "default": "outline"
+      },
+      {
+        "type": "header",
+        "content": "t:sections.bundle-extra-words.settings_schema.labels.misc"
+      },
+			{
+				"type": "checkbox",
+				"id": "open_first",
+				"label": "t:sections.faq.settings.open_first.label",
+        "default": false
+			},
+      {
+        "type": "header",
+        "content": "t:sections.bundle-extra-words.sections.headings.gutter.label"
+      },
+      {
+        "type": "checkbox",
+        "id": "gutter_decrease",
+        "label": "t:sections.bundle-extra-words.sections.headings.gutter.content",
+        "default": false
+      },
+      {
+        "type": "header",
+        "content": "t:sections.refactor_words.seo.name"
+      },
+      {
+        "type": "select",
+        "id": "seo_h_tag",
+        "label": "t:sections.refactor_words.seo.label",
+        "info": "t:sections.refactor_words.seo.info",
+        "options": [
+          {
+            "value": "h1",
+            "label": "H1"
+          },
+          {
+            "value": "h2",
+            "label": "H2"
+          },
+          {
+            "value": "h3",
+            "label": "H3"
+          },
+          {
+            "value": "h4",
+            "label": "H4"
+          },
+          {
+            "value": "span",
+            "label": "span"
+          }
+        ],
+        "default": "h2"
+      }
+		],
+    "blocks": [
+      {
+        "type": "text",
+        "name": "t:sections.local-extra-words.sections.content-toggles.block",
+        "settings": [
+          {
+            "type": "header",
+            "content": "t:sections.local-extra-words.sections.faq.headings.header"
+          },
+          {
+            "type": "text",
+            "id": "title",
+            "label": "t:sections.split-extra-words.settings_schema.headings.title",
+            "default": "Question title"
+          },
+          {
+            "type": "text",
+            "id": "subtitle",
+            "label": "t:sections.split-extra-words.settings_schema.headings.subtitle",
+            "default": "Question subtitle"
+          },
+          {
+            "type": "select",
+            "id": "icon",
+            "label": "t:sections.text-columns-with-icons.blocks.icon.settings.icon.label",
+            "options": [
+              {
+                "value": "no-icon",
+                "label": "No icon"
+              },
+              {
+                "value": "earth-globe",
+                "label": "Earth globe",
+                "group": "Business"
+              },
+              {
+                "value": "flag",
+                "label": "Flag",
+                "group": "Business"
+              },
+              {
+                "value": "helpline",
+                "label": "Helpline",
+                "group": "Business"
+              },
+              {
+                "value": "like-hand",
+                "label": "Like hand",
+                "group": "Business"
+              },
+              {
+                "value": "map-marker",
+                "label": "Map marker",
+                "group": "Business"
+              },
+              {
+                "value": "security-shield",
+                "label": "Security shield",
+                "group": "Business"
+              },
+              {
+                "value": "star",
+                "label": "Star",
+                "group": "Business"
+              },
+              {
+                "value": "appointment",
+                "label": "Appointment",
+                "group": "Commerce"
+              },
+              {
+                "value": "archive-box",
+                "label": "Archive box",
+                "group": "Commerce"
+              },
+              {
+                "value": "box",
+                "label": "Box",
+                "group": "Commerce"
+              },
+              {
+                "value": "checkout-cart",
+                "label": "Checkout cart",
+                "group": "Commerce"
+              },
+              {
+                "value": "currency",
+                "label": "Currency",
+                "group": "Commerce"
+              },
+              {
+                "value": "delivery",
+                "label": "Delivery",
+                "group": "Commerce"
+              },
+              {
+                "value": "delivery-time",
+                "label": "Delivery time",
+                "group": "Commerce"
+              },
+              {
+                "value": "giftbox",
+                "label": "Giftbox",
+                "group": "Commerce"
+              },
+              {
+                "value": "label",
+                "label": "Label",
+                "group": "Commerce"
+              },
+              {
+                "value": "open-24-hours",
+                "label": "Open 24 hours",
+                "group": "Commerce"
+              },
+              {
+                "value": "open-box",
+                "label": "Open box",
+                "group": "Commerce"
+              },
+              {
+                "value": "paper-bag",
+                "label": "Paper bag",
+                "group": "Commerce"
+              },
+              {
+                "value": "shipping-truck",
+                "label": "Shipping truck",
+                "group": "Commerce"
+              },
+              {
+                "value": "store",
+                "label": "Store",
+                "group": "Commerce"
+              },
+              {
+                "value": "time",
+                "label": "Time",
+                "group": "Commerce"
+              },
+              {
+                "value": "time-limit",
+                "label": "Time limit",
+                "group": "Commerce"
+              },
+              {
+                "value": "wallet",
+                "label": "Wallet",
+                "group": "Commerce"
+              }
+            ],
+            "default": "no-icon"
+          },
+          {
+            "type": "text",
+            "id": "button_label",
+            "label": "t:sections.rich-text.blocks.button.settings.button_label.label"
+          },
+          {
+            "type": "url",
+            "id": "button_link",
+            "label": "t:sections.rich-text.blocks.button.settings.button_link.label"
+          },
+          {
+            "type": "header",
+            "content": "t:sections.local-extra-words.sections.faq.headings.content"
+          },
+          {
+            "type": "richtext",
+            "id": "body",
+            "label": "t:sections.faq.blocks.text.settings.text.label",
+            "default": "<p>Write a complete answer to the most frequent questions that your customers might have, such as important product information, shipping policies, payment issues or returns.</p>"
+          },
+          {
+            "type": "image_picker",
+            "id": "image",
+            "label": "t:sections.faq.blocks.text.settings.image.label"
+          }
+        ]
+      }
+    ],
+    "presets": [
+      {
+        "name": "t:sections.local-extra-words.sections.content-toggles.name",
+        "blocks": [
+          {
+            "type": "text",
+            "settings": {
+              "title": "Shipping details",
+              "body": "<p>Write some useful information about your shipping details<\/p><p>Link to your <a href='#'>shipping policy</a>.<\/p>"
+            }
+          },
+          {
+            "type": "text",  
+            "settings": {
+              "title": "Delivery details",
+              "body": "<p>Let your customers know if you offer free delivery for certain types of orders<\/p><p>Link to your <a href='#'>offers page</a>.<\/p>"
+            }
+          },
+          {
+            "type": "text",  
+            "settings": {
+              "title": "Returns details",
+              "body": "<p>Show customers how much time they have for testing your products<\/p><p>Link to your <a href='#'>returns policy</a>.<\/p>"
+            }
+          }
+        ]
+      }
+    ],
+    "disabled_on": {
+      "groups": ["header"]
+    }
+  }
+{% endschema %}

@@ -1,0 +1,264 @@
+<quick-buy
+  data-add-to-cart-price="{{ add_to_cart_price }}"
+  data-default-to-first-variant="{{ default_to_first_variant }}"
+  {% if change_variant_images and settings.product_card_thumbnail_gallery %} data-variant-images-slider {% endif %}
+>
+
+  {%- liquid
+
+    assign product_form_id = 'product-form-' | append: id
+    assign current_variant = product.selected_or_first_available_variant
+    assign color_label = settings.color_swatches_labels | split: ','
+
+    if product.has_only_default_variant
+      assign default_to_first_variant_setting = true
+    else
+      assign default_to_first_variant_setting = default_to_first_variant
+    endif;
+
+  -%}
+
+  <div id="product-price-{{ id }}" data-js-quick-buy-product-price style="display:none">
+    {%- render 'product-price', variant: current_variant, target: current_variant -%}
+  </div>
+
+  {%- if defer_purchase -%}
+    <div data-js-quick-buy-product-title style="display:none">
+      {{ product.title | escape }}
+    </div>
+    <div data-js-quick-buy-product-image style="display:none">
+      {{ product.featured_media | image_url }}
+    </div>
+  {%- endif -%}
+
+  <product-variants 
+    data-variants="{{ product.options_with_values.size }}"
+    data-hide-variants="{%- liquid
+      if unavailable_variants == 'disable' 
+        echo 'disable'
+      elsif unavailable_variants == 'show'
+        echo 'true'
+      else
+        echo 'hide'
+      endif
+    -%}"
+    data-url="{{ product.url }}" data-id="{{ id }}"
+    data-style="{{ variants_style }}"
+    data-no-history
+    {% if unavailable_variants == 'hide' %} class="product-variants--hide-unavailable" {% endif %}
+    {% unless default_to_first_variant_setting %} data-variant-required {% endunless %}
+    {% unless product.has_only_default_variant %} data-has-variants {% elsif product.available == false %} data-unavailable {% endunless %}
+    {% if defer_purchase %} data-show-bundle-wording {% endif %}
+  > 
+
+    <div class="product-variants no-js-hidden"
+      {% if product.has_only_default_variant %} style="display:none" {% endif %}
+      {% if product.available == false and unavailable_variants == 'hide' %} style="display:none" {% endif %}
+    >
+
+      {%- for option in product.options_with_values -%}
+
+        {%- assign option_downcased = option.name | downcase %}
+        
+        <div class="product-variant" data-name="product-{{ option.name | escape | downcase | strip }}-{{ id }}" data-js-product-variant>
+
+          <span class="product-variant__name text-size--small">{{ 'products.grid.select_variant' | t: variant: option.name }}</span>
+
+          {%- if color_label contains option_downcased and show_color_swatches -%}
+
+            <css-slider data-options='{
+              "selector": ".product-variant__item",
+              "groupCells": true,
+              "navigation": false,
+              "thumbnails": false,
+              "delayDrag": 300
+            }' class="css-slider css-slider--scrollbars-visible css-slider--no-snap">
+              <div class="product-variant__container product-variant__container--radio" data-js-product-variant-container="radio">
+                {%- for value in option.values -%}
+                  <div class="product-variant__item product-variant__item--radio product-variant__item--color">
+                    <input type="radio" name="product-{{ option.name | escape | downcase | strip }}-{{ id }}" id="{{ product.handle }}-option-{{ option.name | escape | downcase | strip }}-{{ forloop.index }}-{{ id }}" value="{{ value | escape }}" {% if default_to_first_variant_setting and option.selected_value == value %}checked{% endif %} class="product-variant__input product-variant-value">
+                    <label for="{{ product.handle }}-option-{{ option.name | escape | downcase | strip }}-{{ forloop.index }}-{{ id }}" class="product-variant__label">
+                      {%- liquid 
+                        assign color_swatch_name = value | handle | append: '.png'
+                        assign color_swatch_image = images[color_swatch_name]
+                        assign color_swatch_background = value | downcase | escape | replace: ' ', ''
+                      -%}
+                      {%- if color_swatch_image != blank -%}
+                        <img class="product-variant__item-swatch product-variant__item-swatch--color"
+                          src="{{ color_swatch_image | image_url: width: 30, height: 30, crop: 'center' }}"
+                          srcset="
+                            {{ color_swatch_image | image_url: width: 30, height: 30, crop: 'center' }} 30w,
+                            {{ color_swatch_image | image_url: width: 60, height: 60, crop: 'center' }} 60w,
+                            {{ color_swatch_image | image_url: width: 90, height: 90, crop: 'center' }} 90w
+                          "
+                          sizes="30px" width="30" height="30"
+                          loading="lazy"
+                          alt="{{ color_swatch_image.alt | escape }}"
+                        />
+                      {%- else -%}
+                        <span class="product-variant__item-swatch product-variant__item-swatch--image" style="background-color:{{ color_swatch_background }}"></span>
+                      {%- endif -%}
+                      <span class="visually-hidden">{{ value | escape }}</span>
+                    </label>
+                  </div>
+                {%- endfor -%}
+
+              </div>
+            </css-slider>
+
+            <span class="product-variant__item-text-label text-size--small text-line-height--small text-color--opacity">
+              {%- liquid
+                unless default_to_first_variant_setting
+                  echo 'products.grid.color_variants_count' | t: count: option.values.size
+                else
+                  echo option.selected_value
+                endunless
+              -%}
+            </span>
+
+          {%- elsif variants_style == 'select' -%}
+
+            <select class="product-variant__container product-variant__container--select text-size--small" id="product-{{ option.name | escape | downcase | strip }}-{{ id }}" data-js-product-variant-container="select">
+              {%- unless default_to_first_variant_setting -%}
+                <option class="product-variant-value" default selected disabled>{{ 'products.grid.select_variant' | t: variant: option.name }}</option>
+              {%- endunless -%}
+              {%- for value in option.values -%}
+                <option class="product-variant-value" value="{{ value | escape }}" {% if default_to_first_variant_setting and option.selected_value == value %}selected{% endif %}>
+                  {{ value | escape }}
+                </option>
+              {%- endfor -%}
+            </select>
+
+          {%- else -%}
+
+          <css-slider data-options='{
+            "selector": ".product-variant__item",
+            "groupCells": true,
+            "navigation": false,
+            "thumbnails": false,
+            "delayDrag": 300
+          }' class="css-slider css-slider--scrollbars-visible css-slider--no-snap">
+            <div class="product-variant__container product-variant__container--radio" data-js-product-variant-container="radio">
+              {%- for value in option.values -%}
+                <div class="product-variant__item product-variant__item--radio">
+                  <input type="radio" name="product-{{ option.name | escape | downcase | strip }}-{{ id }}" id="{{ product.handle }}-option-{{ option.name | escape | downcase | strip }}-{{ forloop.index }}-{{ id }}" value="{{ value | escape }}" {% if default_to_first_variant_setting and option.selected_value == value %}checked{% endif %} class="product-variant__input product-variant-value">
+                  <label for="{{ product.handle }}-option-{{ option.name | escape | downcase | strip }}-{{ forloop.index }}-{{ id }}" class="product-variant__label text-size--small">
+                    {{ value | escape }}
+                  </label>
+                </div>
+              {%- endfor -%}
+            </div>
+          </css-slider>
+
+          {%- endif -%}
+
+        </div>
+
+      {%- endfor -%}
+
+    </div>
+
+    <noscript>
+      <label for="Variants-{{ id }}" class="text-size--small" style="display:block;margin-bottom:.75rem">{{ 'products.page.variants' | t }}</label>
+      <select name="id" id="Variants-{{ id }}" class="productSelect"
+        {% if product.has_only_default_variant %} style="display:none!important" {% endif %}
+        form="{{ product_form_id }}"
+      >
+        {%- for variant in product.variants -%}
+          <option
+            {% if variant == current_variant %}selected="selected"{% endif %}
+            {% if variant.available == false %}disabled{% endif %}
+            value="{{ variant.id }}"
+          >
+            {{ variant.title }}
+            {% if variant.available == false %} - {{ 'products.page.inventory.sold_out_variant' | t }}{% endif %}
+            - {{ variant.price | money | strip_html }}
+          </option>
+        {%- endfor -%}
+      </select>
+    </noscript>
+
+    <script type="application/json">
+      {{ product.variants | json }}
+    </script>
+
+  </product-variants>
+
+  <div
+    id="add-to-cart-{{ id }}" class="product-form" 
+    {% unless defer_purchase or defer_ajax_cart %} data-js-quick-buy-form {% endunless %}
+    {% if defer_purchase and unavailable_variants == 'hide' and product.available == false %} style="display:none" {% endif %}
+  >
+    
+    {%- form 'product', product, id: product_form_id, class: 'form', novalidate: 'novalidate', data-type: 'add-to-cart-form' -%}
+
+      <template>
+        <input type="hidden" name="id" value="{{ current_variant.id }}">
+      </template>
+      <script>
+        document.getElementById('add-to-cart-{{ id }}').querySelector('form').append(document.getElementById('add-to-cart-{{ id }}').querySelector('template').content.cloneNode(true));
+      </script>
+
+      <button type="submit" name="add" class="add-to-cart 
+        {% unless defer_add %} button {% if button_style == 'solid' %} button--solid {% else %} button--outline button--outline-hover-solid button--fullwidth {% endif %} button--loader button--move {% endunless %}
+        {% unless current_variant.available %} disabled {% endunless %} 
+        {% unless default_to_first_variant_setting %} disabled {% endunless %}" 
+        data-js-product-add-to-cart
+        {% if defer_add %} title="{{ 'products.grid.choose_variant_first' | t }}" {% endif %}
+      >
+        <span class="button__text" data-js-product-add-to-cart-text>
+          {%- liquid
+            if default_to_first_variant_setting
+              if current_variant.available
+                if defer_purchase
+                  echo 'products.bundles.add_product_to_bundle' | t
+                else
+                  echo 'products.page.add_to_cart_button' | t
+                  if add_to_cart_price and default_to_first_variant == false
+                    echo current_variant.price | money | prepend: '<span class="element--hide-on-small"> - ' | append: '</span>' 
+                  endif
+                endif
+              else
+                echo 'products.page.inventory.sold_out_variant' | t
+              endif
+            else
+              if product.available
+                echo 'products.grid.choose_variant_first' | t
+              else
+                echo 'products.page.inventory.sold_out_variant' | t
+              endif
+            endif
+          -%}
+        </span>
+        <span class="button__preloader">
+          <svg class="button__preloader-element" viewBox="25 25 50 50"><circle cx="50" cy="50" r="20" fill="none" stroke-width="4" style="fill:none!important"/></svg>
+        </span>
+        {%- if defer_add -%}
+          <svg width="39" height="29" viewBox="0 0 39 29" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M34.5104 1.79071L37.4476 4.72792L14.929 27.2466L11.9918 24.3093L34.5104 1.79071Z" fill="none"/><path d="M17.8662 24.3093L14.929 27.2466L2.20109 14.5186L5.1383 11.5814L17.8662 24.3093Z" fill="none"/><path d="M34.864 1.43716L34.5104 1.0836L34.1569 1.43716L14.929 20.665L5.49186 11.2279L5.1383 10.8743L4.78475 11.2279L1.84754 14.1651L1.49398 14.5186L1.84754 14.8722L11.2847 24.3093L11.6382 24.6629L14.5755 27.6001L14.929 27.9537L15.2826 27.6001L18.2198 24.6629L18.5733 24.3093L37.8012 5.08148L38.1548 4.72792L37.8012 4.37437L34.864 1.43716Z" stroke="var(--color-text-main)" stroke-opacity="1" fill:none /></svg>
+        {%- endif -%}
+      </button>
+
+    {%- endform -%}
+
+  </div>
+
+  {%- if change_variant_images and settings.product_card_thumbnail_gallery == false -%}
+
+    <div style="display:none" data-js-quick-buy-product-images>
+
+      {%- assign variant_images = product.images | where: 'attached_to_variant?', true | map: 'src' -%}
+      {%- if product.media.size > 1 -%}
+          {%- for media in product.media -%}
+            {%- if variant_images contains media.src -%}
+              <template data-media-id="{{ media.id }}">
+                {%- render 'lazy-image', image: media, alt: product.title, ratio: image_aspect_ratio, type: 'background', class: 'product-item__image-figure product-item__image-figure--primary lazy-image--zoom-animation', sizes: image_sizes, preload: preload -%}
+              </template>
+            {%- endif -%}
+        {%- endfor -%}
+      {%- endif -%}   
+
+    </div>
+
+  {%- endif -%}
+
+</quick-buy>

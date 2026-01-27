@@ -1,0 +1,25 @@
+.no-js-hidden,
+.shopify-payment-button {
+  display: none !important;
+}
+
+.qty-selector {
+  border-style: solid !important;
+  border-width: var(--border-width-forms) !important;
+  border-color: var(--color-borders-forms-primary) !important;
+  border-radius: var(--border-radius-forms);
+}
+
+.product-quantity {
+  min-width: 0 !important;
+}
+
+.site-nav.style--classic .submenu.mega-menu {
+  display: flex;
+}
+@media screen and (min-width: 1361px) {
+  .site-nav.style--classic .submenu.mega-menu {
+    width: 100vw;
+    margin-inline-start: calc((100vw - var(--theme-max-width)) / -2);
+  }
+}

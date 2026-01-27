@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: idv-ocr
+    env: python
+    rootDir: idv-backend
+    plan: free
+    buildCommand: "apt-get update && apt-get install -y tesseract-ocr && pip install -r requirements.txt"
+    startCommand: "gunicorn app:app"
+    envVars:
+      - key: MIN_AGE
+        value: "18"
+      - key: MAX_UPLOAD_BYTES
+        value: "5242880"
+      - key: CORS_ALLOWED_ORIGINS
+        value: "*"
+      - key: MOCK_VERIFIED
+        value: "false"

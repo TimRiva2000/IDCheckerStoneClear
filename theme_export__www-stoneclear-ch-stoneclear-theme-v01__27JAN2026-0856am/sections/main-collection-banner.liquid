@@ -1,0 +1,119 @@
+{% unless section.settings.show_collection_image and collection.image %}
+  {%- render 'breadcrumb', container: 'large', vertical_space: 'vertical-space-xsmall', style: 'breadcrumb-main--margin' -%}
+{%- endunless -%}
+
+<div class="
+  {% if section.settings.show_collection_image and collection.image %}
+    container--fullwidth reduce-margin-if-first
+  {% else %}
+    container--large container--vertical-space-small
+  {% endif %}
+">
+  
+  {%- if section.settings.show_collection_image and collection.image -%}
+  
+    <div id="element-main-collection-banner" class="card align-content align-content--horizontal-left align-content--vertical-bottom margin-bottom--large element--height-{{ section.settings.height }}">
+
+      <div class="container--large container--vertical-space-small" style="z-index:9">
+        <div class="card__text gutter-bottom--large spacing--small remove-empty-space" style="margin:0">
+
+          {%- render 'breadcrumb', container: 'element--show-when-section-is-first', vertical_space: 'vertical-space-xsmall', style: 'breadcrumb-main--margin' -%}
+
+          <div class="container--vertical-space-small">
+            <div class="section-heading section-heading--left section-heading--two-rows">
+              <div class="section-heading__text remove-empty-space">
+                <h1 class="heading-size--page-title">{{ collection.title | escape }}</h1>
+                {%- if section.settings.show_collection_description and collection.description != blank -%}
+                  <div class="collection-header__description rte">{{ collection.description }}</div>
+                {%- endif -%}
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="card__image card__image--background {% if section.settings.color_background_main != "rgba(0,0,0,0)" %} card__image--with-overlay {% endif %}" aria-hidden="true">
+        {%- render 'lazy-image', image: collection.image, type: 'background', alt: collection.title, sizes: 'sizes="100vw"', class: 'lazy-image--to-reveal', id: section.id, overlay: true, preload: true -%} 
+      </div>
+
+      {%- render 'custom-colors', id: 'main-collection-banner', text: section.settings.color_text_main, background: section.settings.color_background_main, hide_borders: true -%}
+
+    </div>
+
+  {%- else -%}
+    
+    <div class="section-heading section-heading--left section-heading--two-rows gutter-bottom--page">
+
+      <div class="section-heading__text remove-empty-space">
+
+        <h1 class="heading-size--page-title">{{ collection.title | escape }}</h1>
+
+        {%- if section.settings.show_collection_description and collection.description != blank -%}
+          <div class="collection-header__description rte">{{ collection.description }}</div>
+        {%- endif -%}
+
+      </div>
+
+    </div>
+
+  {%- endif -%}
+
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.main-collection-banner.name",
+  "class": "main-collection-banner toggle-when-first container--remove-margin-after",
+  "settings": [
+    {
+      "id": "show_collection_description",
+      "type": "checkbox",
+      "default": false,
+      "label": "t:sections.main-collection-banner.settings.show_collection_description.label"
+    },
+    {
+      "id": "show_collection_image",
+      "type": "checkbox",
+      "default": false,
+      "label": "t:sections.main-collection-banner.settings.show_collection_image.label"
+    },
+    {
+      "type": "paragraph",
+      "content": "t:sections.main-collection-banner.settings.paragraph.content"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.bundle-extra-words.sections.main-collection.settings.image_banner.header"
+    },
+    {
+      "type": "color",
+      "id": "color_background_main",
+      "label": "t:sections.local-extra-words.settings_schema.colors.settings.overlay",
+      "default": "rgba(0,0,0,0)"
+    },
+    {
+      "type": "color",
+      "id": "color_text_main",
+      "label": "t:sections.split-extra-words.settings_schema.colors.settings.text",
+      "default": "rgba(0,0,0,0)"
+    },
+    {
+      "type": "select",
+      "id": "height",
+      "label": "t:sections.bundle-extra-words.sections.main-collection.settings.image_banner.height",
+      "options": [
+        {
+          "value": "small",
+          "label": "t:sections.local-extra-words.sections.media-with-text-overlay.settings.option__1"
+        },
+        {
+          "value": "regular",
+          "label": "t:sections.local-extra-words.sections.media-with-text-overlay.settings.option__2"
+        }
+      ],
+      "default": "small"
+    }
+  ]
+}
+{% endschema %}

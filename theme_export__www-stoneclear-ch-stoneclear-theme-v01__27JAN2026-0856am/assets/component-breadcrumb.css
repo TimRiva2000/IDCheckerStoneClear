@@ -1,0 +1,129 @@
+.breadcrumb-container {
+  overflow: -moz-scrollbars-none;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.breadcrumb-container::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.breadcrumb {
+  height: 1.25rem;
+  opacity: 0.54;
+  width: auto;
+  margin: 0;
+  flex-shrink: 0;
+  line-height: 1.1;
+  display: flex;
+}
+.breadcrumb-main {
+  width: 100%;
+}
+.breadcrumb-main.breadcrumb-main--margin {
+  margin-bottom: var(--gutter-breadcrumbs);
+}
+.breadcrumb-main:not(.breadcrumb-main--margin) {
+  margin-bottom: var(--gutter-container);
+}
+.breadcrumb-main--scroll {
+  position: relative;
+}
+.breadcrumb-main--scroll:after, .breadcrumb-main--scroll:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  height: 100%;
+  background: var(--color-background-main);
+}
+.breadcrumb-main--scroll:after {
+  width: calc(var(--gutter-regular) * 2);
+  background: linear-gradient(-90deg, var(--color-background-main) 50%, var(--color-opacity-background-main) 100%);
+}
+html[dir=rtl] .breadcrumb-main--scroll:after {
+  left: 0;
+}
+html[dir=ltr] .breadcrumb-main--scroll:after {
+  right: 0;
+}
+.breadcrumb-main--scroll:before {
+  width: var(--gutter-regular);
+  background: linear-gradient(90deg, var(--color-background-main) 50%, var(--color-opacity-background-main) 100%);
+}
+html[dir=rtl] .breadcrumb-main--scroll:before {
+  right: -var(--gutter-regular);
+}
+html[dir=ltr] .breadcrumb-main--scroll:before {
+  left: -var(--gutter-regular);
+}
+.element--show-when-section-is-first .breadcrumb-main {
+  position: relative;
+  top: 0;
+  height: auto;
+}
+.element--show-when-section-is-first .breadcrumb-main:before, .element--show-when-section-is-first .breadcrumb-main:after {
+  display: none;
+}
+.element--show-when-section-is-first .breadcrumb-main .breadcrumb-container {
+  padding: 0;
+}
+@media screen and (max-width: 1023px) {
+  .breadcrumb-main .breadcrumb {
+    font-size: calc(
+					13px / 16 * var(--base-body-primary-size) + 0px
+				);
+  }
+}
+@media screen and (min-width: 1024px) {
+  .breadcrumb-main .breadcrumb {
+    font-size: calc(
+				14px / 16 * var(--base-body-primary-size) + 0px
+			);
+  }
+}
+.breadcrumb-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  overflow-x: auto;
+  height: 100%;
+  width: 100%;
+}
+@media screen and (max-width: 474px) {
+  .breadcrumb {
+    font-size: calc(
+				13px / 16 * var(--base-body-primary-size) + 0px
+			);
+  }
+}
+@media screen and (min-width: 475px) and (max-width: 1023px) {
+  .breadcrumb {
+    font-size: calc(
+					14px / 16 * var(--base-body-primary-size) + 0px
+				);
+  }
+}
+@media screen and (min-width: 1024px) {
+  .breadcrumb {
+    font-size: calc(
+				15px / 16 * var(--base-body-primary-size) + 0px
+			);
+  }
+}
+.breadcrumb > span:not(:last-child) {
+  margin-inline-end: 0.6875rem;
+}
+.breadcrumb > span:last-child {
+  margin-inline-end: var(--gutter-regular);
+}
+.breadcrumb__link a {
+  border-bottom: none !important;
+  transition: all 100ms linear;
+}
+.breadcrumb__link a span {
+  background-position: 0 calc(1em + 2px);
+}
+
+.hide-after-elements ~ .elements-to-be-hidden-after {
+  display: none;
+}

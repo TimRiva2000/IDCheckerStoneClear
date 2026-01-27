@@ -1,0 +1,36 @@
+{%- if settings.id_verification_enable and cart.item_count > 0 -%}
+  {%- assign idv_verified = cart.attributes.id_verified | default: '' -%}
+  <div
+    class="idv-block cart-block element--has-border--body element--border-radius margin-top--regular"
+    data-idv-root
+    data-idv-verified="{% if idv_verified == 'true' %}true{% else %}false{% endif %}"
+    data-idv-endpoint="{{ settings.id_verification_endpoint | escape }}"
+  >
+    <div class="cart-block__head">
+      <span>{{ settings.id_verification_title }}</span>
+    </div>
+    <div class="cart-block__content">
+      <p class="text-size--small text-color--opacity idv-block__help" data-idv-help>
+        {{ settings.id_verification_help }}
+      </p>
+      <div class="idv-block__controls">
+        <input
+          type="file"
+          accept="image/*"
+          class="idv-block__file"
+          data-idv-file
+          aria-label="Upload ID"
+        >
+        <button
+          type="button"
+          class="button button--regular button--solid"
+          data-idv-submit
+          disabled
+        >
+          <span class="button__text">{{ settings.id_verification_button_text }}</span>
+        </button>
+      </div>
+      <p class="text-size--small idv-block__status" data-idv-status aria-live="polite"></p>
+    </div>
+  </div>
+{%- endif -%}

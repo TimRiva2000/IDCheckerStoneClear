@@ -1,0 +1,71 @@
+{%- if recommendations.performed and recommendations.products_count > 0 -%}
+	<div class="cart-recommendations-sidebar" data-js-cart-recommendations-performed>
+		<div class="text-weight--medium gutter-bottom--small gutter-top--small">{{ settings.cart_recommendations_heading }}</div>
+		<css-slider
+      data-options='{
+        "selector": ".product-item",
+        "groupCells": true,
+        "navigationDOM": "<span class=\"css-slider-button css-slider-prev\" style=\"display:none\"><svg fill=\"none\" height=\"11\" viewBox=\"0 0 6 11\" width=\"6\" xmlns=\"http://www.w3.org/2000/svg\"><path clip-rule=\"evenodd\" d=\"m4.32845 10.0708-4.18198-4.18194c-.195261-.19526-.195261-.51185 0-.70711l4.18198-4.181979c.19527-.195262.51185-.195262.70711 0 .19526.195259.19526.511849 0 .707109l-3.32843 3.32842s-.70713.4647-.00002 1l3.32845 3.32843c.19526.19526.19526.51185 0 .70707-.19526.1953-.51185.1953-.70711 0z\" fill=\"#000\" fill-rule=\"evenodd\"/></svg></span><span class=\"css-slider-button css-slider-next\" style=\"display:none\"><svg fill=\"none\" height=\"11\" viewBox=\"0 0 6 11\" width=\"6\" xmlns=\"http://www.w3.org/2000/svg\"><path clip-rule=\"evenodd\" d=\"m.853555.999962 4.181985 4.181978c.19526.19526.19526.51185 0 .70711l-4.181983 4.18195c-.195263.1953-.511845.1953-.707108 0-.1952631-.19523-.1952632-.51181 0-.70708l3.328431-3.32842s.70713-.4647.00002-1l-3.328453-3.32843c-.1952626-.19526-.1952627-.51185 0-.707108.195263-.195262.511845-.195262.707108 0z\" fill=\"#000\" fill-rule=\"evenodd\"/></svg></span>"
+      }'
+      class="css-slider css-slider--bottom-navigation gutter-bottom--small"
+    > 
+      <div class="grid grid--slider grid-2 grid--align-items-stretch" style="--col-gap:20px">
+		  {%- for product in recommendations.products -%}
+				<div class="product-item" data-js-product-item>
+
+					<a href="{{ product.url }}">
+            {%- liquid 
+              assign divide_ratio = 1 | divided_by: settings.cart_image_ratio
+              assign height_170 = 170 | times: divide_ratio | round
+              assign height_340 = 340 | times: divide_ratio | round
+              assign height_510 = 510 | times: divide_ratio | round
+            -%}
+            <figure class="lazy-image lazy-image--small lazy-image--scale-animation {% if settings.cart_image_fit %} lazy-image--fit {% endif %}" data-ratio style="padding-top: {{ 100 | divided_by: settings.cart_image_ratio }}%">
+              <img 
+                {% unless settings.cart_image_fit %}
+                  {%- liquid 
+                    assign divide_ratio = 1 | divided_by: settings.cart_image_ratio
+                    assign height_170 = 170 | times: divide_ratio | round
+                    assign height_340 = 340 | times: divide_ratio | round
+                    assign height_510 = 510 | times: divide_ratio | round
+                  -%}
+                  src="{{ product.featured_media | image_url: width: 170, height: height_170, crop: 'center' }}" 
+                  srcset="
+                    {{ product.featured_media | image_url: width: 170, height: height_170, crop: 'center' }} 170w, 
+                    {{ product.featured_media | image_url: width: 340, height: height_340, crop: 'center' }} 340w, 
+                    {{ product.featured_media | image_url: width: 510, height: height_510, crop: 'center' }} 510w
+                  "
+                {% else %}
+                  src="{{ product.featured_media | image_url: width: 170 }}" 
+                  srcset="
+                    {{ product.featured_media | image_url: width: 170 }} 170w, 
+                    {{ product.featured_media | image_url: width: 340 }} 340w, 
+                    {{ product.featured_media | image_url: width: 510 }} 510w
+                  "
+                {% endunless %}
+                alt="{{ product.featured_media.alt | escape }}"
+                loading="lazy"
+                sizes="170px"
+                width="170" height="{{ height_170 }}"
+                onload="this.parentNode.classList.add('lazyloaded')"
+              />
+            </figure>
+					</a>
+
+          <div class="product-item__text gutter-top--small">
+
+            <div class="text-size--small" style="margin-bottom:.5em">
+              {%- render 'product-price', target: product, variant: product.selected_or_first_available_variant, product_price_varies: product.price_varies -%}
+            </div>
+       
+            <a href="{{ product.url }}" class="text-line-height--small text-weight--medium">
+              <span class="text-animation--underline-thin">{{ product.title | escape }}</span>
+            </a>	
+          
+          </div>
+
+				</div>
+	  	{%- endfor -%}
+	  </css-slider>
+ 	</div>
+{%- endif -%}

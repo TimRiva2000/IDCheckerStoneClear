@@ -1,0 +1,35 @@
+{%- unless settings.gift_wrap_product == blank -%}
+          
+  <div id="cart-wrapping" class="cart-wrapping {{ class }}">
+
+    {%- liquid 
+      for item in cart.items
+        if item.product_id == settings.gift_wrap_product.id
+          assign checked = 'checked'
+        endif
+      endfor
+    -%}
+
+    <input data-js-cart-wrapping-checkbox type="checkbox" {{ checked }} class="styled-checkbox" id="cart-gift-wrapping" />
+    <label for="cart-gift-wrapping">{{ settings.gift_wrap_heading | escape }}</label>
+    <div style="display:none !important">{%- render 'quick-buy', product: settings.gift_wrap_product, default_to_first_variant: true -%}</div>
+
+    <script>
+      const cartWrappingForm = document.getElementById('cart-wrapping');
+      document.querySelector('[data-js-cart-wrapping-checkbox]').addEventListener('click', e=>{
+        if ( document.getElementById('site-cart-sidebar') ) {
+          document.getElementById('site-cart-sidebar').scrollTo({top: 0, behavior: 'smooth'});
+        } 
+        if ( e.target.checked ) {
+          cartWrappingForm.querySelector('[data-js-product-add-to-cart]').click();
+        } else {
+          if ( document.querySelector('.cart-item--gift-wrapping') ) {
+            document.querySelector('.cart-item--gift-wrapping .remove').click();
+          }
+        }
+      })
+    </script>
+
+  </div>
+  
+{%- endunless -%}

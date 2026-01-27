@@ -1,0 +1,342 @@
+{{ 'section-before-after.css' | asset_url | stylesheet_tag }}
+
+<div id="section-{{ section.id }}">
+  
+  <div class="container--large container--vertical-space{% if section.settings.gutter_decrease %}-small{% endif %} remove-empty-space">
+    {%- render 'section-heading', heading: section.settings.heading, subheading: section.settings.subheading, heading_size: section.settings.section_heading_size, section_layout: section.settings.section_heading_layout, button: section.settings.cta_label, button_label: section.settings.cta_label, link: section.settings.cta_url, seo_h_tag: section.settings.seo_h_tag -%}
+  </div>
+
+  <div class="container--large element--overflow-hidden remove-empty-space">
+
+    {%- style -%}
+      #section-{{ section.id }} .before-after figure,
+      #section-{{ section.id }} .before-after img {
+        border-radius: {{ section.settings.border_radius }}px;
+      }
+    {%- endstyle -%}
+
+    {%- liquid
+      if section.index == 1
+        assign preload = true
+      else
+        assign preload = false
+      endif
+    -%}
+
+    <before-after data-layout="{{ section.settings.layout }}" class="{%- if section.settings.invert_layout -%}invert-layout{%- endif -%}">
+      {%- if section.blocks.size > 0 -%}
+      <div class="before-after {{ section.settings.desktop_height }} {{ section.settings.mobile_height }} before-after--color-style-{{ section.settings.color_style }}">
+      {%- for block in section.blocks -%}
+        <div class="img {% if forloop.index == 2 %} foreground-img {% else %} background-img {% endif %}" id="{{ block.id }}" {{ block.shopify_attributes }}> 
+          <div class="before-after__label-wrapper">
+            {% if block.settings.label != blank %}
+            <span class="before-after__label">
+              {{ block.settings.label }}
+            </span>
+            {% endif %}
+          
+          {% liquid
+          assign desktop_image_class = ""
+          if block.settings.image_mobile != blank
+            assign desktop_image_class = "element--hide-on-mobile"
+          endif
+
+          unless block.settings.image == blank
+
+            render 'lazy-image', image: block.settings.image, type: 'background', image_alignment: true, id: block.id, class: desktop_image_class, sizes: 'sizes="100vw"', preload: preload
+
+          else
+            render 'lazy-svg', image: 'product-1', class: 'svg-placeholder svg-placeholder--background' 
+          endunless
+          %}
+
+          {%- liquid
+            if block.settings.image_mobile != blank
+              assign image_block = block.id | prepend: 'mobile-'
+              render 'lazy-image', image: block.settings.image_mobile, type: 'background', image_alignment: true, id: image_block, class: 'element--hide-on-desk', sizes: 'sizes="100vw"', preload: preload
+            endif
+          -%}
+
+          </div>
+        </div>
+      {%- endfor -%}
+        <input type="range" min="0" max="100" value="50" class="before-after__slider" orient="{{ section.settings.layout }}">
+        <span class="before-after--handle">
+          <span class="before-after--handle-icon">
+            {%- render 'theme-symbols', icon: 'arrow-left-right' -%}
+          </span>
+        </span>
+      </div>
+      {%- endif -%}
+
+    </before-after>
+
+  </div>
+  
+  {%- render 'section-footer', button: section.settings.cta_label, button_label: section.settings.cta_label, link: section.settings.cta_url -%}
+  
+</div>
+
+<script src="{{ 'component-before-after.js' | asset_url }}" defer></script>
+
+{% schema %}
+{
+  "name": "t:sections.refactor_words.before_after.name",
+  "class": "mount-video-background supports-absolute-header",
+  "settings": [
+    {
+      "type": "header",
+      "content": "t:sections.bundle-extra-words.sections.headings.name"
+    },
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:sections.local-extra-words.sections.headings.heading",
+      "default": "Before & After"
+    },
+    {
+      "type": "inline_richtext",
+      "id": "subheading",
+      "label": "t:sections.local-extra-words.sections.headings.subheading",
+      "default": "Compare your <strong>best</strong> offers"
+    },
+    {
+      "type": "select",
+      "id": "section_heading_size",
+      "label": "t:sections.bundle-extra-words.sections.headings.size.label",
+      "options": [
+        {
+          "value": "text-size--regular",
+          "label": "t:sections.bundle-extra-words.sections.headings.size.option_1"
+        },
+        {
+          "value": "text-size--large",
+          "label": "t:sections.bundle-extra-words.sections.headings.size.option_2"
+        }
+      ],
+      "default": "text-size--regular"
+    },
+    {
+      "type": "select",
+      "id": "section_heading_layout",
+      "label": "t:sections.bundle-extra-words.sections.headings.alignment.label",
+      "options": [
+        {
+          "value": "section-heading--left section-heading--one-row",
+          "label": "t:sections.bundle-extra-words.sections.headings.alignment.option_1",
+          "group": "t:sections.bundle-extra-words.sections.headings.layout.option_1"
+        },
+        {
+          "value": "section-heading--left section-heading--two-rows",
+          "label": "t:sections.bundle-extra-words.sections.headings.alignment.option_1",
+          "group": "t:sections.bundle-extra-words.sections.headings.layout.option_2"
+        },
+        {
+          "value": "section-heading--center section-heading--two-rows",
+          "label": "t:sections.bundle-extra-words.sections.headings.alignment.option_2",
+          "group": "t:sections.bundle-extra-words.sections.headings.layout.option_2"
+        }
+      ],
+      "default": "section-heading--left section-heading--one-row"
+    },
+    {
+      "type": "text",
+      "id": "cta_label",
+      "label": "t:sections.bundle-extra-words.settings_schema.labels.button_text"
+    },
+    {
+      "type": "url",
+      "id": "cta_url",
+      "label": "t:sections.bundle-extra-words.settings_schema.labels.button_url"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.bundle-extra-words.sections.headings.layout.label"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "t:sections.bundle-extra-words.sections.headings.layout.label",
+      "options": [
+        {
+          "value": "horizontal",
+          "label": "t:sections.refactor_words.before_after.layout.option__1"
+        },
+        {
+          "value": "vertical",
+          "label": "t:sections.refactor_words.before_after.layout.option__2"
+        }
+      ],
+      "default": "horizontal"
+    },
+    {
+      "type": "checkbox",
+      "id": "invert_layout",
+      "label": "t:sections.refactor_words.late_edits.before-after.layout.invert",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "desktop_height",
+      "label": "Desktop height",
+      "options": [
+        {
+          "value": "before-after--desktop-small",
+          "label": "t:sections.image-with-text.settings.image_height.options__1.label"
+        },
+        {
+          "value": "before-after--desktop-medium",
+          "label": "t:sections.image-with-text.settings.image_height.options__2.label"
+        },
+        {
+          "value": "before-after--desktop-large",
+          "label": "t:sections.image-with-text.settings.image_height.options__3.label"
+        }
+      ],
+      "default": "before-after--desktop-medium"
+    },
+    {
+      "type": "select",
+      "id": "mobile_height",
+      "label": "Mobile height",
+      "options": [
+        {
+          "value": "before-after--mobile-small",
+          "label": "t:sections.image-with-text.settings.image_height.options__1.label"
+        },
+        {
+          "value": "before-after--mobile-medium",
+          "label": "t:sections.image-with-text.settings.image_height.options__2.label"
+        },
+        {
+          "value": "before-after--mobile-large",
+          "label": "t:sections.image-with-text.settings.image_height.options__3.label"
+        }
+      ],
+      "default": "before-after--mobile-medium"
+    },
+    {
+      "type": "header",
+      "content": "t:settings_schema.colors.name"
+    },
+    {
+      "type": "select",
+      "id": "color_style",
+      "label": "t:sections.refactor_words.before_after.style.label",
+      "options": [
+        {
+          "value": "dark",
+          "label": "t:sections.refactor_words.before_after.style.option__2"
+        },
+        {
+          "value": "light",
+          "label": "t:sections.refactor_words.before_after.style.option__1"
+        }
+      ],
+      "default": "dark"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.bundle-extra-words.settings_schema.card.settings.design.header"
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "label": "t:sections.bundle-extra-words.settings_schema.buttons.settings.border_radius",
+      "min": 0,
+      "max": 30,
+      "step": 1,
+      "unit": "px",
+      "default": 0
+    },
+    {
+      "type": "header",
+      "content": "t:sections.bundle-extra-words.sections.headings.gutter.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "gutter_decrease",
+      "label": "t:sections.bundle-extra-words.sections.headings.gutter.content",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "t:sections.refactor_words.seo.name"
+    },
+    {
+      "type": "select",
+      "id": "seo_h_tag",
+      "label": "t:sections.refactor_words.seo.label",
+      "info": "t:sections.refactor_words.seo.info",
+      "options": [
+        {
+          "value": "h1",
+          "label": "H1"
+        },
+        {
+          "value": "h2",
+          "label": "H2"
+        },
+        {
+          "value": "h3",
+          "label": "H3"
+        },
+        {
+          "value": "h4",
+          "label": "H4"
+        },
+        {
+          "value": "span",
+          "label": "span"
+        }
+      ],
+      "default": "h2"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "image",
+      "limit": 2,
+      "name": "t:sections.local-extra-words.sections.media-with-text-overlay.blocks.image.name",
+      "settings": [
+        {
+          "id": "image",
+          "type": "image_picker",
+          "label": "t:sections.gallery.blocks.image.settings.image.label"
+        },
+        {
+          "id": "image_mobile",
+          "type": "image_picker",
+          "label": "t:sections.image.mobile_image"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.local-extra-words.sections.headings.text_content"
+        },
+        {
+          "type": "text",
+          "id": "label",
+          "label": "t:sections.refactor_words.before_after.image.label__3",
+          "default": "Label"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.refactor_words.before_after.name",
+      "blocks": [
+        { "type": "image", "settings": {
+          "label": "Before"
+        } },
+        { "type": "image", "settings": {
+          "label": "After"
+        } }
+      ]
+    }
+  ],
+  "disabled_on": {
+    "groups": ["header"]
+  }
+}
+{% endschema %}

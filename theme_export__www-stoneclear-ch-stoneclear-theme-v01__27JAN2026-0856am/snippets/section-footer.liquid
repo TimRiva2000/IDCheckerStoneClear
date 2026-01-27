@@ -1,0 +1,7 @@
+{%- unless button == blank -%}
+  <div class="section-footer {% unless show_always %} element--hide-on-desk {% endunless %}">
+    <div class="section-footer__actions">
+      {%- render 'button', label: button_label, link: link, style: 'arrow-right', label_is_translation: button_label_is_translation -%}
+    </div>
+  </div>
+{%- endunless -%}

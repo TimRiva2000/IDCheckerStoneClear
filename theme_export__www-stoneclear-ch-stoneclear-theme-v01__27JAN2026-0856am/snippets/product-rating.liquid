@@ -1,0 +1,96 @@
+{% liquid
+
+  assign star_size = 20
+
+  assign rating = 0
+  assign no_reviews = true
+  assign reviews_count = 0
+
+  if vendor == "stamped" or vendor == "ali" or vendor == "yotpo"
+    assign custom_widget = vendor
+  elsif vendor == "rapid"
+    assign rating = product.metafields.rapid_reviews.counts.value.r.rating.avg
+    assign reviews_count = product.metafields.rapid_reviews.counts.value.r.counts.core.total
+  elsif vendor == "loox"
+    assign rating = product.metafields.loox.avg_rating
+    assign reviews_count = product.metafields.loox.num_reviews
+  elsif vendor == "judgeme"
+    assign rating = product.metafields.reviews.rating.value.rating | plus: 0
+    assign reviews_count = product.metafields.reviews.rating_count | plus: 0
+  elsif vendor == "air"
+    assign rating = product.metafields.air_reviews_product.review_avg
+    assign reviews_count = product.metafields.air_reviews_product.review_count
+  else
+    if product.metafields.reviews.rating.value != blank
+      assign rating = product.metafields.reviews.rating.value.rating
+      assign reviews_count = product.metafields.reviews.rating_count 
+    endif
+  endif
+
+  assign rating_decimal = 0
+  assign decimal = rating | modulo: 1
+  if decimal >= 0.3 and decimal <= 0.7
+    assign rating_decimal = 0.5
+  elsif decimal > 0.7
+    assign rating_decimal = 1
+  endif
+
+  if reviews_count > 0
+    assign no_reviews = false
+  endif
+
+  assign scale_max = 5
+  assign active_stars_shown = rating | floor | plus: rating_decimal | times: 100 | divided_by: scale_max
+
+-%}
+
+{%- if custom_widget == blank -%}
+
+  <div class="star-rating" aria-label="">
+
+    <span class="visually-hidden">
+      {%- liquid
+        unless no_reviews 
+          echo 'general.accessibility_labels.rating_info' | t: rating_value: rating, rating_max: scale_max
+        else 
+          echo 'products.page.reviews_count.none' | t
+        endunless
+      -%}
+    </span>
+      
+    <span class="star-rating__stars" style="
+      width:{{ scale_max | times: star_size }}px;
+    ">
+      <span class="star-rating__stars-active" style="width:{{ active_stars_shown }}%"></span>
+    </span>
+    
+    <span class="star-rating__caption text-size--small {% if hide_no_reviews_on_mobile %} palm-hide {% endif %}">
+      {%- liquid
+        unless no_reviews 
+          echo reviews_count | prepend: '(' | append: ')'
+        else
+          echo 'products.page.reviews_count.none' | t
+        endunless
+      -%}
+    </span>
+
+  </div>
+
+{%- else -%}
+
+  {%- if custom_widget == "stamped" -%}
+    <span 
+      class="stamped-product-reviews-badge" 
+      data-id="{{ product.id }}"
+      data-product-sku="{{ product.handle }}" 
+      data-product-type="{{ product.type }}" 
+      data-product-title="{{ product.title }}" 
+      style="display:block;">
+    </span>
+  {%- elsif custom_widget == "ali" -%}
+    <div product-id="{{ product.id }}" product-handle="{{ product.handle }}" class="alireviews-review-star-rating"></div>
+  {%- elsif custom_widget == "yotpo" -%}
+    <div class="yotpo bottomLine" data-product-id="{{ product.id }}"></div>
+  {%- endif -%}
+
+{%- endif -%}

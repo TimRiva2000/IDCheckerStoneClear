@@ -1,0 +1,152 @@
+{%- assign date_format = 'general.date_format.month_day_year' | t -%}
+
+<div class="blog-item spacing--large remove-empty-space"> 
+
+  {%- if show_image -%}
+
+    <a class="blog-item__image increased-spacing" href="{{ article.url }}" title="{{ article.title | escape }}" style="--blog-item-border-radius: {{ image_border_radius }}px">
+
+      {%- if article.image == blank or blank_article == true -%}
+
+        {%- render 'lazy-svg', image: 'image', ratio: image_aspect_ratio, class: 'svg-placeholder svg-placeholder--foreground' -%}
+
+      {%- else -%}
+
+        {%- if layout contains 'grid-1' -%}
+          {%- capture sizes -%}
+            sizes="(max-width: {{ settings.theme_max_width | times: 920 | divided_by: 1360 }}px) calc(100vw - 40px), {{ settings.theme_max_width | times: 920 | divided_by: 1360 | minus: 80 }}px"
+          {%- endcapture -%}
+        {%- elsif layout contains 'grid-2' -%}
+          {%- capture sizes -%}
+            sizes="(max-width: 468px) calc(100vw - 40px), (max-width: {{ settings.theme_max_width | times: 920 | divided_by: 1360 }}px) calc(50vw - 40px), {{ settings.theme_max_width | times: 920 | divided_by: 2720 | minus: 50 }}px"
+          {%- endcapture -%}
+        {%- elsif layout contains 'grid-3' -%}
+          {%- capture sizes -%}
+            sizes="(max-width: 767px) 100vw, (max-width: {{ settings.theme_max_width }}px) 33vw, {{ settings.theme_max_width | divided_by: 3 }}px"
+          {%- endcapture -%}
+        {%- endif -%}
+
+        {%- liquid
+          if image_border_radius > 0 
+            assign image_class = 'lazy-image--zoom-animation lazy-image--to-reveal'
+          else
+            assign image_class = 'lazy-image--animation lazy-image--to-reveal'
+          endif
+          if section.index == 1 and index == 1
+            assign preload = true
+          else
+            assign preload = false
+          endif
+          render 'lazy-image', image: article.image.src, alt: article.title, ratio: image_aspect_ratio, class: image_class, sizes: sizes, preload: preload
+        -%}
+
+      {%- endif -%}
+
+    </a>
+
+  {%- endif -%}
+  
+  {%- for block in section_blocks -%}
+    
+    {%- case block.type -%}
+
+      {%- when 'title' -%}
+        <div class="blog-item__title-holder" {{ block.shopify_attributes }}>
+          <a href="{{ article.url }}" title="{{ article.title | escape }}">
+            <span class="text-animation--underline
+              {% if layout contains 'grid-1' %} 
+                text-size--xlarge text-weight--bold text-line-height--small
+              {% else %} 
+                text-size--larger text-weight--medium text-line-height--medium
+              {% endif %}
+            ">
+              {%- liquid
+                unless blank_article
+                  echo article.title | escape
+                else
+                  echo 'general.onboarding.article_title' | t
+                endunless
+              -%}
+            </span>
+          </a>
+        </div>
+      
+      {%- when 'tags' -%}
+        <div class="blog-item__tags increased-spacing" {{ block.shopify_attributes }}>
+            {%- if article.tags.size > 0 -%}
+              {% for tag in article.tags limit: block.settings.tags_limit %}
+                <a class="pill" href="{{ blogurl }}/tagged/{{ tag.handle }}">{{ tag }}</a>
+              {% endfor %}
+            {%- endif -%}
+        </div>
+
+      {%- when 'summary' -%}
+        <div class="blog-item__excerpt" {{ block.shopify_attributes }}>
+          <span class="element--is-inline-block">
+            {%- liquid
+              if article.excerpt.size > 0
+                echo article.excerpt | strip_html
+              else
+                echo article.content | strip_html | truncatewords: block.settings.excerpt_limit, "..."
+              endif
+            -%}
+          </span>
+        </div>
+
+      {%- when 'info' -%}
+        <div class="blog-item__meta" {{ block.shopify_attributes }}>
+
+          {%- if block.settings.show_author -%}
+            <span class="blog-item__author text-size--small">
+              {%- liquid
+                unless blank_article
+                  echo article.author | escape
+                else  
+                  echo 'general.onboarding.author_name' | t
+                endunless 
+              -%}
+            </span>
+          {%- endif -%}
+
+          {%- if block.settings.show_date -%}
+            <span class="blog-item__date text-size--small">
+              {%- liquid 
+                unless blank_article
+                  echo article.published_at | date: date_format 
+                else 
+                  echo 'Feb 28 2020' | date: date_format
+                endunless
+              -%}
+            </span>
+          {%- endif -%}
+
+          {%- if block.settings.show_comments_number -%}
+            <span class="blog-item__date text-size--small">
+              {%- liquid
+                unless blank_article
+                  echo 'blog.grid.comments_count' | t: count: article.comments_count
+                else
+                  echo 'general.onboarding.seven_comments' | t
+                endunless
+              -%}
+            </span>
+          {%- endif -%}
+
+        </div>
+
+      {%- when 'button' -%}
+        <div class="gutter-top--small" {{ block.shopify_attributes }}>
+          {%- render 'button', label: block.settings.button_label, link: article.url, label_is_translation: false, style: 'outline' -%}
+        </div>
+        
+    {%- endcase -%}
+
+  {%- endfor -%}
+  
+  {%- if layout contains "grid-1" -%}
+    <div class="gutter-top--large">
+      {%- render 'hr' -%}
+    </div>
+  {%- endif -%}
+  
+</div>

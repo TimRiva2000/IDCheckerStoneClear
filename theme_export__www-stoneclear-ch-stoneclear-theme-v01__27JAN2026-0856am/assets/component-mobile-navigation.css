@@ -1,0 +1,121 @@
+mobile-navigation {
+  display: block;
+  padding: 0 !important;
+  min-height: 100%;
+}
+mobile-navigation .site-nav {
+  padding: 0;
+}
+mobile-navigation .site-nav nav {
+  transition: transform 300ms ease-in-out;
+}
+mobile-navigation .site-nav ul {
+  padding: 0 var(--sidebar-gutter);
+}
+mobile-navigation .site-nav ul a:not(.button):not(.menu-promotion-background-image) {
+  width: 100%;
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--color-borders-main);
+  display: flex;
+  justify-content: space-between;
+}
+mobile-navigation .site-nav .submenu, mobile-navigation .site-nav .babymenu {
+  width: 100%;
+  position: absolute;
+  top: 0;
+  transition: transform 300ms ease-in-out;
+  display: none;
+}
+html[dir=rtl] mobile-navigation .site-nav .submenu, html[dir=rtl] mobile-navigation .site-nav .babymenu {
+  right: 0;
+}
+html[dir=ltr] mobile-navigation .site-nav .submenu, html[dir=ltr] mobile-navigation .site-nav .babymenu {
+  left: 0;
+}
+mobile-navigation .site-nav .submenu {
+  transform: translateX(100%);
+}
+mobile-navigation .site-nav .babymenu {
+  transform: translateX(100%);
+}
+mobile-navigation .site-nav li > a > .icon svg {
+  transform: rotate(-90deg);
+}
+html[dir=rtl] mobile-navigation .site-nav li > a > .icon svg {
+  transform: rotate(90deg);
+}
+mobile-navigation .site-nav li > a > .icon path {
+  stroke: none;
+}
+mobile-navigation .site-nav .has-promotion {
+  padding: 2rem 0;
+}
+mobile-navigation .site-nav .has-promotion + .has-promotion {
+  margin-top: -2rem;
+}
+mobile-navigation .site-nav .text-animation--underline-in-header {
+  padding-bottom: 0;
+  background: none;
+}
+mobile-navigation .site-nav .icon {
+  margin-inline-start: 0;
+  margin-inline-end: -0.75rem;
+  display: flex;
+  align-items: center;
+}
+mobile-navigation .site-nav .submenu-back {
+  cursor: pointer;
+}
+mobile-navigation .site-nav .submenu-back a {
+  justify-content: flex-start !important;
+}
+mobile-navigation .site-nav .submenu-back .icon {
+  margin-inline-start: -0.125rem;
+  margin-inline-end: 0.625rem;
+}
+html[dir=rtl] mobile-navigation .site-nav .submenu-back .icon {
+  display: block;
+  transform: rotate(180deg);
+}
+mobile-navigation .site-nav .submenu-back .icon svg {
+  position: relative;
+  top: -0.0625rem;
+  transform: rotate(90deg);
+}
+mobile-navigation .site-nav .button__icon svg * {
+  fill: none;
+}
+mobile-navigation .menu-link svg {
+  margin-inline-end: 0.75rem;
+}
+mobile-navigation .menu-link svg path {
+  stroke: var(--color-text-main);
+}
+mobile-navigation.opened-first-submenu nav {
+  transform: translateX(-100%);
+}
+mobile-navigation.opened-second-submenu nav {
+  transform: translateX(-200%);
+}
+mobile-navigation li.has-submenu.opened .submenu {
+  display: block;
+}
+mobile-navigation li.has-babymenu.opened .babymenu {
+  display: block;
+}
+mobile-navigation .grid {
+  padding: var(--sidebar-gutter) 0;
+}
+mobile-navigation .product-item {
+  display: block !important;
+  border: none !important;
+  padding: 0 !important;
+}
+mobile-navigation .mega-menu__footer {
+  margin-bottom: calc(var(--gutter-regular) * 1.5);
+}
+mobile-navigation .menu-promotion-content a {
+  border-bottom: 1px solid !important;
+  padding: 0 !important;
+  display: inline !important;
+}

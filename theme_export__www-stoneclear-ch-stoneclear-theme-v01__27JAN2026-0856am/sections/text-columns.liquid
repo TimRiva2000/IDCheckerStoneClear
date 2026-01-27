@@ -1,0 +1,208 @@
+<div class="container--large container--vertical-space{% if section.settings.gutter_decrease %}-small{% endif %} remove-empty-space">
+
+  <div class="grid grid--layout {{ section.settings.layout }} grid--align-items-stretch" style="grid-row-gap: calc(var(--col-gap) * 2)">
+  
+    {%- for block in section.blocks -%}
+
+      <div id="element-{{ block.id }}" class="card card--no-borders card--animation {{ section.settings.block_text_alignment }}" {{ block.shopify_attributes }}>
+
+        <div class="spacing--small remove-empty-space {{ section.settings.block_text_alignment }}">
+
+          {%- unless block.settings.title == blank -%}
+            <div>
+              <{{ section.settings.seo_h_tag }} class="text-font--primary text-size--large text-weight--bold">
+                {{ block.settings.title | escape }}
+              </{{ section.settings.seo_h_tag }}>
+            </div>
+            {%- endunless -%}
+
+          {%- unless block.settings.caption == blank -%}
+            <div class="rte remove-empty-space">{{ block.settings.caption }}</div>
+          {%- endunless -%}
+
+        </div>
+
+      </div>
+
+      {%- render 'custom-colors', id: block.id, text: block.settings.color_text_main, background: block.settings.color_background_main, borders: block.settings.color_borders_main, border_radius: section.settings.border_radius -%}
+
+    {%- endfor %}
+
+  </div>
+
+  {%- render 'section-footer', button: section.settings.cta_label, button_label: section.settings.cta_label, link: section.settings.cta_url -%}
+
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.words_210.text_columns.name",
+  "class": "mount-css-slider",
+  "settings": [
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "t:sections.local-extra-words.sections.columns.name",
+      "info": "t:sections.local-extra-words.sections.columns.info",
+      "options": [
+        {
+          "value": "grid-3 grid-lap-1",
+          "label": "t:sections.local-extra-words.sections.columns.option__2"
+        },
+        {
+          "value": "grid-4 grid-lap-2 grid-palm-1",
+          "label": "t:sections.local-extra-words.sections.columns.option__3"
+        }
+      ],
+      "default": "grid-3 grid-lap-1"
+    },
+    {
+      "type": "select",
+      "id": "block_text_alignment",
+      "label": "t:sections.rich-text.settings.text_alignment.label",
+      "options": [
+        {
+          "value": "text-align--left",
+          "label": "t:sections.rich-text.settings.text_alignment.options__1.label"
+        },
+        {
+          "value": "text-align--center",
+          "label": "t:sections.rich-text.settings.text_alignment.options__2.label"
+        }
+      ],
+      "default": "text-align--left"
+    },
+    {
+      "type": "header",
+      "content": "t:sections.bundle-extra-words.sections.headings.gutter.label"
+    },
+    {
+      "type": "checkbox",
+      "id": "gutter_decrease",
+      "label": "t:sections.bundle-extra-words.sections.headings.gutter.content",
+      "default": false
+    },
+    {
+      "type": "header",
+      "content": "t:sections.refactor_words.seo.name"
+    },
+    {
+      "type": "select",
+      "id": "seo_h_tag",
+      "label": "t:sections.refactor_words.seo.label",
+      "info": "t:sections.refactor_words.seo.info",
+      "options": [
+        {
+          "value": "h1",
+          "label": "H1"
+        },
+        {
+          "value": "h2",
+          "label": "H2"
+        },
+        {
+          "value": "h3",
+          "label": "H3"
+        },
+        {
+          "value": "h4",
+          "label": "H4"
+        },
+        {
+          "value": "span",
+          "label": "span"
+        }
+      ],
+      "default": "h2"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "text",
+      "name": "t:sections.words_210.text_columns.block.name",
+      "settings": [
+        {
+          "type": "header",
+          "content": "t:sections.local-extra-words.sections.headings.text_content"
+        },
+        {
+          "type": "text",
+          "id": "title",
+          "label": "t:sections.local-extra-words.sections.headings.title",
+          "default": "Text"
+        },
+        {
+          "type": "richtext",
+          "id": "caption",
+          "label": "t:sections.local-extra-words.sections.faq.headings.content",
+          "default": "<p>Introduce your brand</p>"
+        },
+        {
+          "type": "header",
+          "content": "t:sections.refactor_words.seo.name"
+        },
+        {
+          "type": "select",
+          "id": "seo_h_tag",
+          "label": "t:sections.refactor_words.seo.label",
+          "info": "t:sections.refactor_words.seo.info",
+          "options": [
+            {
+              "value": "h1",
+              "label": "H1"
+            },
+            {
+              "value": "h2",
+              "label": "H2"
+            },
+            {
+              "value": "h3",
+              "label": "H3"
+            },
+            {
+              "value": "h4",
+              "label": "H4"
+            },
+            {
+              "value": "span",
+              "label": "span"
+            }
+          ],
+          "default": "h3"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "t:sections.words_210.text_columns.name",
+      "blocks": [
+        {
+          "type": "text",
+          "settings": {
+            "title": "Shipping",
+            "caption": "<p>Useful information about your shipping details</p>"
+          }
+        },
+        {
+          "type": "text",
+          "settings": {
+            "title": "Returns",
+            "caption": "<p>Show how much time customers have for testing your products</p>"
+          }
+        },
+        {
+          "type": "text",
+          "settings": {
+            "title": "Pickup",
+            "caption": "<p>Let your customers know about local pickup</p>"
+          }
+        }
+      ]
+    }
+  ],
+  "disabled_on": {
+    "groups": ["header"]
+  }
+}
+{% endschema %}

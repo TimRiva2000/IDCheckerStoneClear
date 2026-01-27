@@ -1,0 +1,226 @@
+{%- liquid
+  assign headings_font_primary = settings.headings_font_primary
+  assign body_font_primary = settings.body_font_primary
+  assign body_font_secondary = settings.body_font_secondary
+-%}
+
+{%- unless headings_font_primary.system? -%}
+  <link rel="preload" href="{{ headings_font_primary | font_url }}" as="font" type="font/woff2" crossorigin>
+{%- endunless -%}
+
+{%- unless body_font_primary.system? -%}
+  <link rel="preload" href="{{ body_font_primary | font_url }}" as="font" type="font/woff2" crossorigin>
+{%- endunless -%}
+
+{%- unless body_font_secondary.system? or body_font_primary == body_font_secondary -%}
+  <link rel="preload" href="{{ body_font_secondary | font_url }}" as="font" type="font/woff2" crossorigin>
+{%- endunless -%}
+
+<style type="text/css">
+
+  {%- comment -%} Fonts {% endcomment %}
+  {%- liquid 
+
+    echo headings_font_primary | font_face: font_display: 'swap'
+
+    echo body_font_primary | font_face: font_display: 'swap'
+
+    assign body_font_primary_medium = body_font_primary | font_modify: 'weight', '+100' 
+    unless body_font_primary_medium == blank 
+      echo body_font_primary_medium | font_face: font_display: 'swap' 
+    endunless 
+
+    assign body_font_primary_bold = body_font_primary | font_modify: 'weight', '+200' 
+    if body_font_primary_bold == blank 
+      assign body_font_primary_bold = body_font_primary | font_modify: 'weight', '700' 
+    endif 
+    echo body_font_primary_bold | font_face: font_display: 'swap' 
+
+    if body_font_secondary != body_font_primary
+      
+      echo body_font_secondary | font_face: font_display: 'swap'
+      assign body_font_secondary_bold = body_font_secondary | font_modify: 'weight', '+100' 
+
+      if body_font_secondary_bold == blank 
+        assign body_font_secondary_bold = body_font_secondary | font_modify: 'weight', '700' 
+      endif 
+      echo body_font_secondary_bold | font_face: font_display: 'swap' 
+
+    else
+      assign body_font_secondary_bold = body_font_primary_bold
+    endif
+    
+
+  -%}
+
+  {%- comment -%} Header Colors {% endcomment %}
+  {%- liquid
+  
+    assign color_background_header = settings.color_background_header
+    assign color_text_header = settings.color_text_header
+
+    assign brightness_text_header = color_text_header | color_brightness
+    if brightness_text_header > 150 
+      assign color_foreground_header = '#000' 
+    else 
+      assign color_foreground_header = '#fff' 
+    endif 
+
+    assign color_borders_header = color_text_header | color_modify: 'alpha', 0.15
+
+  -%}
+
+  {%- comment -%} Footer Colors {% endcomment %}
+  {%- liquid
+  
+    assign color_background_footer = settings.color_background_footer
+    assign color_text_footer = settings.color_text_footer
+    assign color_borders_footer = color_text_footer | color_modify: 'alpha', 0.15
+
+  -%}
+
+  {%- comment -%} Main Colors {% endcomment %}
+  {%- liquid
+  
+    assign color_background_main = settings.color_background_main
+    assign color_text_main = settings.color_text_main
+
+    assign brightness_text_main = color_text_main | color_brightness
+    if brightness_text_main > 150 
+      assign color_foreground_main = '#000' 
+    else 
+      assign color_foreground_main = '#fff' 
+    endif 
+
+    assign color_borders_main = color_text_main | color_modify: 'alpha', 0.1
+    assign color_secondary_background_main = color_text_main | color_modify: 'alpha', 0.08
+    assign color_third_background_main = color_text_main | color_modify: 'alpha', 0.04
+    assign color_fourth_background_main = color_text_main | color_modify: 'alpha', 0.02
+    assign color_secondary_text_main = color_text_main | color_modify: 'alpha', 0.6
+
+    assign color_borders_forms_primary = color_text_main | color_modify: 'alpha', 0.3
+    assign color_borders_forms_secondary = color_text_main | color_modify: 'alpha', 0.6
+
+    assign color_opacity_background_main = color_background_main | color_modify: 'alpha', 0
+
+  -%}
+
+
+</style>
+<style type="text/css">
+
+  :root {
+
+    /* Font variables */
+
+    --font-stack-headings-primary: {{ headings_font_primary.family }}, {{ headings_font_primary.fallback_families }};
+    --font-weight-headings-primary: {{ headings_font_primary.weight }};
+    --font-style-headings-primary: {{ headings_font_primary.style }};
+
+    --font-stack-body-primary: {{ body_font_primary.family }}, {{ body_font_primary.fallback_families }};
+    --font-weight-body-primary: {{ body_font_primary.weight }};
+    {%- if body_font_primary_bold -%}
+      --font-weight-body-primary-bold: {{ body_font_primary_bold.weight }}; 
+    {%- else -%}
+      --font-weight-body-primary-bold: 700;
+    {%- endif -%}
+    {%- if body_font_primary_medium -%}
+      --font-weight-body-primary-medium: {{ body_font_primary_medium.weight }}; 
+    {%- else -%}
+      --font-weight-body-primary-medium: {{ body_font_primary.weight }};
+    {%- endif -%}
+    --font-style-body-primary: {{ body_font_primary.style }};
+
+    --font-stack-body-secondary: {{ body_font_secondary.family }}, {{ body_font_secondary.fallback_families }};
+    --font-weight-body-secondary: {{ body_font_secondary.weight }};
+    {%- if body_font_secondary_bold -%}
+      --font-weight-body-secondary-bold: {{ body_font_secondary_bold.weight }}; 
+    {%- else -%}
+      --font-weight-body-secondary-bold: 700;
+    {%- endif -%}
+    --font-style-body-secondary: {{ body_font_secondary.style }};
+
+    --font-weight-menu: var(--font-weight-body-primary-medium);
+    --font-weight-buttons: var(--font-weight-body-primary-medium);
+
+    --base-headings-primary-size: {{ settings.headings_primary_size }};
+    --base-headings-secondary-size: {{ settings.headings_secondary_size }};
+    --base-headings-line: {{ settings.headings_line }};
+    --base-headings-spacing: {{ settings.headings_spacing | divided_by: 100.0 }}em;
+
+    --base-body-primary-size: {{ settings.body_primary_size }};
+    --base-body-secondary-size: {{ settings.body_secondary_size }};
+    --base-body-line: {{ settings.body_line }};
+
+    /* Color variables */
+
+    --color-background-header: {{ color_background_header }};
+    --color-text-header: {{ color_text_header }};
+    --color-foreground-header: {{ color_foreground_header }};
+    --color-borders-header: {{ color_borders_header }};
+
+    --color-background-main: {{ color_background_main }};
+    --color-secondary-background-main: {{ color_secondary_background_main }};
+    --color-third-background-main: {{ color_third_background_main }};
+    --color-fourth-background-main: {{ color_fourth_background_main }};
+    --color-opacity-background-main: {{ color_opacity_background_main }};
+    --color-text-main: {{ color_text_main }};
+    --color-foreground-main: {{ color_foreground_main }};
+    --color-secondary-text-main: {{ color_secondary_text_main }};
+    --color-borders-main: {{ color_borders_main }};
+    --color-background-main-alternate: {{ settings.color_background_main_secondary }};
+
+    --color-background-product-card: {{ settings.product_card_background }};
+    --color-background-cart-card: {{ settings.cart_image_background }};
+
+    --color-background-footer: {{ color_background_footer }};
+    --color-text-footer: {{ color_text_footer }};
+    --color-borders-footer: {{ color_borders_footer }};
+
+    --color-borders-forms-primary: {{ color_borders_forms_primary }};
+    --color-borders-forms-secondary: {{ color_borders_forms_secondary }};
+
+    /* Borders */
+
+    --border-width-cards: {{ settings.border_width_cards }}px;
+    --border-radius-cards: 0px;
+    --border-width-buttons: {{ settings.border_width_buttons }}px;
+    --border-radius-buttons: {{ settings.border_radius_buttons }}px;
+    --border-width-forms: {{ settings.border_width_forms }}px;
+    --border-radius-forms: {{ settings.border_radius_forms }}px;
+    --border-radius-widgets: {{ settings.widgets_border_radius }}px;
+    --border-radius-product-card: {{ settings.product_card_border_radius }}px;
+
+    /* Layout */
+    
+    --theme-max-width: {{ settings.theme_max_width }}px;
+    --grid-gap-original-base: {{ settings.grid_gap }}px;
+    --container-vertical-space-base: {{ settings.container_vertical_space }}px;
+    --image-fit-padding: {{ settings.proudct_card_aspect_ratio_padding }}%;
+
+  }
+
+  .facets--horiz .facets__summary, #main select, .sidebar select {
+    background-image: url('data:image/svg+xml;utf8,<svg fill="none" height="7" viewBox="0 0 12 7" width="12" xmlns="http://www.w3.org/2000/svg"><g fill="{{ settings.color_text_main | url_encode }}"><path d="m1.2334.554688 5.65685 5.656852-.7071.70711-5.656858-5.65686z"/><path d="m11.8252 1.26221-5.65686 5.65685-.70711-.70711 5.65687-5.65685z"/></g></svg>');
+  }
+
+  .star-rating__stars {
+    background-image: url('data:image/svg+xml;utf8,<svg width="20" height="14" viewBox="0 0 14 13" fill="{{ color_borders_main | url_encode }}" xmlns="http://www.w3.org/2000/svg"><path d="m7 0 1.572 4.837h5.085l-4.114 2.99 1.572 4.836L7 9.673l-4.114 2.99 1.571-4.837-4.114-2.99h5.085L7 0Z" stroke="{{ color_borders_main | url_encode }}" stroke-width="0"/></svg>');
+  }
+  .star-rating__stars-active {
+    background-image: url('data:image/svg+xml;utf8,<svg width="20" height="13" viewBox="0 0 14 13" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="m7 0 1.572 4.837h5.085l-4.114 2.99 1.572 4.836L7 9.673l-4.114 2.99 1.571-4.837-4.114-2.99h5.085L7 0Z" fill="{{ settings.color_text_main | url_encode }}" stroke-width="0"/></svg>');
+  }
+
+  {% if settings.product_card_border != "rgba(0,0,0,0)" %}
+    .product-item__image-figure {
+      border: 1px solid {{ settings.product_card_border }};
+    }
+  {% endif %}
+
+</style>
+
+<style id="root-height">
+  :root {
+    --window-height: 100vh;
+  }
+</style>

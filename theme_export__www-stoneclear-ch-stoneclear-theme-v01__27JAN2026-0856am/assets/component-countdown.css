@@ -1,0 +1,76 @@
+.countdown {
+  z-index: 9;
+  position: relative;
+  display: flex;
+  justify-content: center;
+}
+.countdown.hide {
+  visibility: hidden;
+}
+.align-content--horizontal-left .countdown {
+  justify-content: flex-start;
+}
+html[dir=rtl] .align-content--horizontal-left .countdown {
+  justify-content: flex-end;
+}
+.align-content--horizontal-center .countdown {
+  justify-content: center;
+}
+.align-content--horizontal-right .countdown {
+  justify-content: flex-end;
+}
+html[dir=rtl] .align-content--horizontal-right .countdown {
+  justify-content: flex-start;
+}
+.countdown .time {
+  display: flex;
+  margin-left: -0.5rem;
+}
+.countdown .time-holder {
+  display: flex;
+  flex-direction: column;
+  margin-left: 0.625rem;
+  margin-right: 0.625rem;
+  text-align: center;
+}
+.countdown .time-holder .time-data {
+  display: flex;
+  direction: ltr;
+}
+.countdown .time-holder > span > span {
+  width: 3.0625rem;
+  height: 3.75rem;
+  background: var(--main-background);
+  border: 1px solid var(--color-text-cards);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: -0.0625rem;
+  border-radius: 0.375rem;
+  font-size: 2.25rem;
+}
+@media screen and (max-width: 1023px) {
+  .countdown .time-holder > span > span {
+    width: 2.4375rem;
+    height: 3.125rem;
+    font-size: 1.875rem;
+  }
+}
+@media screen and (max-width: 474px) {
+  .countdown .time-holder > span > span {
+    width: 1.8125rem;
+    height: 2.5rem;
+    font-size: 1.25rem;
+  }
+}
+.countdown .time-helper {
+  font-weight: var(--font-weight-body-primary-bold);
+  margin-top: 0.625rem;
+  text-transform: uppercase;
+}
+html[dir=rtl] .countdown .time-helper {
+  text-align: right;
+}
+html[dir=ltr] .countdown .time-helper {
+  text-align: left;
+}

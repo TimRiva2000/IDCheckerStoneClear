@@ -1,0 +1,46 @@
+{%- case type -%}
+
+  {%- when 'colors' -%}
+
+    {% liquid
+      assign size_limit = value.size | at_most: 4
+      assign rotation = '0deg'
+      if size_limit == 2
+        assign rotation = '45deg'
+      endif
+
+      assign angle_increment = 360 | divided_by: size_limit
+      assign angle = 0
+    %}
+    {%- capture conic_gradient -%}
+      {%- for color in value limit: size_limit -%}
+        {{ color }} {{ angle }}deg{%- assign angle = angle | plus: angle_increment %} {{ angle }}deg{%- unless forloop.last %}, {%- endunless -%}
+      {%- endfor -%}
+    {%- endcapture -%}
+    
+    <div
+      class="swatch-list__item-color"
+      style="background: conic-gradient({{ conic_gradient }}); transform: rotateZ({{ rotation }});"
+    ></div>
+
+  {%- when 'image' -%}
+
+    <div class="swatch-list__item-image">
+      <img 
+        src="{{ value | image_url: width: 50, height: 50, crop: 'center' }}" 
+        srcset="
+          {{ value | image_url: width: 50, height: 50, crop: 'center' }} 50w, 
+          {{ value | image_url: width: 100, height: 100, crop: 'center' }} 100w, 
+          {{ value | image_url: width: 150, height: 150, crop: 'center' }} 150w
+        "
+        alt="{{ value.alt | escape }}"
+        loading="lazy"
+        sizes="100px"
+        width="100" height="100"
+      />
+    </div>
+      
+  {%- else -%}
+    <div class="swatch-list-na"></div>
+
+{%- endcase -%}

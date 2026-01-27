@@ -1,0 +1,32 @@
+{%- unless heading == blank and subheading == blank and button == blank -%}
+  
+  <div class="section-heading {{ section_layout }} gutter-bottom--large">
+    
+    {%- unless heading == blank and subheading == blank -%}
+
+      <div class="section-heading__text remove-empty-space">
+
+        {%- unless heading == blank -%}
+          <{{ seo_h_tag }} class="section-heading__title text-font--secondary {{ heading_size }}">{{ heading | escape }}</{{ seo_h_tag }}>
+        {%- endunless -%}
+
+        {%- unless subheading == blank -%}
+          <span class="section-heading__subheading text-size--small text-color--opacity">{{ subheading }}</span>
+        {%- endunless -%}
+
+      </div>
+
+    {%- endunless -%}
+    
+    {%- unless button == blank -%}
+      <div class="section-heading__actions">
+        {%- if button -%}
+          {%- render 'button', label: button_label, link: link, style: 'outline element--hide-on-small', label_is_translation: button_label_is_translation -%}
+        {%- endif -%}
+      </div>
+
+    {%- endunless -%}
+  
+  </div>
+
+{%- endunless -%}

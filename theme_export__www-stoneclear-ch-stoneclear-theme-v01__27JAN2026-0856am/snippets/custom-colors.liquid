@@ -1,0 +1,47 @@
+{%- if background != blank and background != "rgba(0,0,0,0)" -%}
+  {% style %}
+    #element-{{ id }} {
+      --color-background-cards: {{ background }};
+    }
+  {% endstyle %}
+{%- endif -%}
+
+{%- if text != blank and text != "rgba(0,0,0,0)" -%}
+  {%- liquid
+    assign brightness_text_main = text | color_brightness
+    if brightness_text_main > 150 
+      assign color_foreground_main = '#000' 
+    else 
+      assign color_foreground_main = '#fff' 
+    endif 
+  -%}
+  {% style %}
+    #element-{{ id }} {
+      --color-text-cards: {{ text }};
+      --color-foreground-cards: {{ color_foreground_main }};
+      --color-secondary-text-cards: {{ text | color_modify: 'alpha', 0.6 }};
+    }
+  {% endstyle %}
+{%- endif -%}
+
+{%- if hide_borders -%}
+  {% style %}
+    #element-{{ id }} {
+      --color-borders-cards: none;
+    }
+  {% endstyle %}
+{%- elsif borders != blank and borders != "rgba(0,0,0,0)" -%}
+  {% style %}
+    #element-{{ id }} {
+      --color-borders-cards: {{ borders }};
+    }
+  {% endstyle %}
+{%- endif -%}
+
+{%- if border_radius > 0 -%}
+  {% style %}
+    #element-{{ id }} {
+      --border-radius-cards: {{ border_radius }}px;
+    }
+  {% endstyle %}
+{%- endif -%}

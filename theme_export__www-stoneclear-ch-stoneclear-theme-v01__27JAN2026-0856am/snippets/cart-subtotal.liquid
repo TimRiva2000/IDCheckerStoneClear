@@ -1,0 +1,117 @@
+<div id="AjaxCartSubtotal">
+
+	{%- if type == 'page' -%}
+
+		{%- if settings.cart_free_shipping -%}
+			<div class="sidebar-widget sidebar-widget--outline gutter-regular margin-bottom--regular">
+				<div class="sidebar-widget__content">
+					<shipping-notice
+						data-free-shipping="{{ settings.cart_free_shipping_amount | times: 100 }}"
+						data-cart-total="{{ cart.total_price }}"
+					>
+						<span data-js-free-shipping-text></span>
+						<span class="cart-notice__slider">
+							<span class="cart-notice__slider-bar" data-js-free-shipping-slider></span>
+						</span>
+					</shipping-notice>
+					<script src="{{ 'component-shipping-notice.js' | asset_url }}" defer></script>
+				</div>
+			</div>
+		{%- endif -%}
+
+		{%- liquid
+			unless settings.cart_upsell_product == blank
+				render 'product-cross-sell', heading: settings.cart_upsell_heading, product: settings.cart_upsell_product, id: 'cart-individual-product-cross-sell', widget_style: 'outline', heading_position: 'widget', class: 'cart-individual-product-recommendation hide-if-empty-cart margin-bottom--regular' 
+			endunless
+		-%}
+
+	{%- endif -%}
+
+	{%- assign idv_enabled = settings.id_verification_enable -%}
+	{%- assign idv_verified = cart.attributes.id_verified | default: '' -%}
+	{%- assign idv_required = false -%}
+	{%- if idv_enabled and cart.item_count > 0 -%}
+		{%- assign idv_required = true -%}
+	{%- endif -%}
+
+	<div class="cart__details 
+		{% if type == 'page' %} cart__subtotal-widget element--has-border--body element--border-radius {% endif %}
+		{% if cart.item_count == 0 %} cart--empty {% endif %}
+	">
+			    
+		{%- if cart.cart_level_discount_applications != blank -%} 
+			<div class="cart__subtotal cart__details--row">
+				<span>{{ 'cart.subtotal' | t }}</span>
+				<strong>{{ cart.items_subtotal_price | money }}</strong>
+			</div>
+			<div class="cart__discounts cart__details--row">
+				<span>{{ 'cart.discounts' | t }}</span>
+				{%- for discount_application in cart.cart_level_discount_applications -%}
+					<strong>{{ discount_application.title }} (-{{ discount_application.total_allocated_amount | money }})</strong>
+				{%- endfor -%}
+			</div>
+		{%- endif -%}
+
+		<div class="cart__total cart__details--row">
+			<span>{{ 'cart.total' | t }}</span> 
+			<strong>{{ cart.total_price | money }}</strong>
+		</div>
+
+
+		{%- if settings.cart_notes_enable and type == 'page' -%}
+			<div class="cart__instructions">
+				<div class="form-field">
+					<label for="cartSpecialInstructions">{{ 'cart.note' | t }}</label>
+					<textarea name="note" id="cartSpecialInstructions" form="cart">{{ cart.note }}</textarea>
+				</div>
+			</div>
+		{%- endif -%}
+
+		<div class="cart__shipping text-color--opacity text-size--small">
+			{%- liquid
+				if cart.taxes_included and shop.shipping_policy.body != blank
+					echo 'cart.policies.taxes_included_and_shipping_policy_html' | t: link: shop.shipping_policy.url
+				elsif cart.taxes_included
+					echo 'cart.policies.taxes_included_but_shipping_at_checkout' | t
+				elsif shop.shipping_policy.body != blank
+					echo 'cart.policies.taxes_and_shipping_policy_at_checkout_html' | t: link: shop.shipping_policy.url
+				else
+					echo 'cart.policies.taxes_and_shipping_at_checkout' | t
+				endif
+			-%}
+		</div>
+
+		<div {% unless template contains 'cart' %} class="flex-buttons" {% endunless %}>
+			{%- unless type == 'page' -%}
+				<a id="ViewCart" href="{{ routes.cart_url }}" class="button button--regular button--outline button--move">
+					<span class="button__text">{{ 'cart.view_cart' | t }}</span>
+				</a>
+			{%- endunless -%}
+			<button
+				id="CheckOut"
+				class="button button--regular button--solid button--move"
+				type="submit"
+				name="checkout"
+				form="cart"
+				data-idv-checkout
+				{% if idv_required and idv_verified != 'true' %}disabled aria-disabled="true"{% endif %}
+			>
+				<span class="button__text">{{ 'cart.checkout' | t }}</span>
+			</button>
+		</div>
+
+		{%- unless template contains 'order' -%}
+			{%- if additional_checkout_buttons and settings.cart_additional_buttons -%}
+				<div
+					class="additional-checkout-buttons additional-checkout-buttons--vertical"
+					data-idv-additional
+					{% if idv_required and idv_verified != 'true' %}style="display:none"{% endif %}
+				>
+					{{ content_for_additional_checkout_buttons }}
+				</div>
+			{%- endif -%}
+		{%- endunless -%}
+
+	</div>
+
+</div>

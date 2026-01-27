@@ -1,0 +1,189 @@
+<div class="container--large container--vertical-space{% if section.settings.gutter_decrease %}-small{% endif %} remove-empty-space">
+
+  <div class="contact-form">
+    <div class="contact-form__the-form">
+
+      {%- unless section.settings.heading == blank -%}
+        <{{ section.settings.seo_h_tag }} class="{{ section.settings.heading_size }} text-font--heading gutter-bottom--small">{{ section.settings.heading | escape }}</{{ section.settings.seo_h_tag }}>
+      {%- endunless -%}
+
+      {%- assign form_id = 'contact-' | append: section.id -%}
+      {%- form 'contact', id: form_id, class: 'isolate' -%}
+
+        {%- liquid 
+          if form.posted_successfully?
+            assign message = 'general.contact_form.success_message' | t
+            render 'form-success', message: message
+          elsif form.errors
+            render 'form-errors', form: form
+          endif
+        -%}
+
+        <!-- Vorname -->
+        <div class="contact-form__row">
+          <label for="{{ form_id }}-vorname">Vorname *</label>
+          <input type="text" id="{{ form_id }}-vorname" class="field__input" name="contact[Vorname]" required>
+        </div>
+
+        <!-- Nachname -->
+        <div class="contact-form__row">
+          <label for="{{ form_id }}-nachname">Nachname *</label>
+          <input type="text" id="{{ form_id }}-nachname" class="field__input" name="contact[Nachname]" required>
+        </div>
+
+        <!-- Firma -->
+        <div class="contact-form__row">
+          <label for="{{ form_id }}-firma">Firma</label>
+          <input type="text" id="{{ form_id }}-firma" class="field__input" name="contact[Firma]">
+        </div>
+
+        <!-- Straße und Hausnummer -->
+        <div class="contact-form__row">
+          <label for="{{ form_id }}-strasse">Straße und Hausnummer *</label>
+          <input type="text" id="{{ form_id }}-strasse" class="field__input" name="contact[Strasse und Hausnummer]" required>
+        </div>
+
+        <!-- PLZ -->
+        <div class="contact-form__row">
+          <label for="{{ form_id }}-plz">PLZ *</label>
+          <input type="text" id="{{ form_id }}-plz" class="field__input" name="contact[PLZ]" pattern="[0-9]*" required>
+        </div>
+
+        <!-- Ort -->
+        <div class="contact-form__row">
+          <label for="{{ form_id }}-ort">Ort *</label>
+          <input type="text" id="{{ form_id }}-ort" class="field__input" name="contact[Ort]" required>
+        </div>
+
+        <!-- Telefon -->
+        <div class="contact-form__row">
+          <label for="{{ form_id }}-phone">Telefon *</label>
+          <input type="tel" id="{{ form_id }}-phone" class="field__input" name="contact[Telefon]" pattern="[0-9+\- ]+" required>
+        </div>
+
+        <!-- E-Mail -->
+        <div class="contact-form__row">
+          <label for="{{ form_id }}-email">E-Mail *</label>
+          <input type="email" id="{{ form_id }}-email" class="field__input" name="contact[email]" spellcheck="false" autocapitalize="off" required>
+        </div>
+
+        <!-- Nachricht -->
+        <div class="contact-form__row">
+          <label for="{{ form_id }}-nachricht">Ihre Nachricht *</label>
+          <textarea id="{{ form_id }}-nachricht" class="text-area field__input" name="contact[Nachricht]" rows="8" required></textarea>
+        </div>
+
+        <div class="contact-form__row">
+          {%- render 'button', label: 'general.contact_form.submit_label', style: 'solid', label_is_translation: true, is_submit: true, type: 'button' -%}
+        </div>
+
+      {%- endform -%}
+
+    </div>
+
+    {%- if section.blocks.size > 0 -%}
+      {%- for block in section.blocks -%}
+        <div class="contact-form__info">
+          {%- unless block.settings.title == blank -%}
+            <{{ block.settings.seo_h_tag }} class="heading-size--xsmall text-font--heading gutter-bottom--small">{{ block.settings.title | escape }}</{{ block.settings.seo_h_tag }}>
+          {%- endunless -%}
+          <div class="element--has-border gutter--regular element--border-radius rte">
+            {{ block.settings.content }}
+          </div>
+        </div>
+      {%- endfor -%}
+    {%- endif -%}
+
+  </div>
+
+</div>
+
+{% schema %}
+{
+  "name": "t:sections.contact-form.name",
+  "settings": [
+    {
+      "type": "text",
+      "id": "heading",
+      "label": "t:sections.local-extra-words.sections.headings.heading",
+      "default": "Schreib uns eine Nachricht"
+    },
+    {
+      "type": "select",
+      "id": "heading_size",
+      "label": "t:sections.bundle-extra-words.sections.headings.size.label",
+      "options": [
+        {
+          "label": "t:sections.bundle-extra-words.sections.headings.size.option_3",
+          "value": "heading-size--xsmall"
+        },
+        {
+          "label": "t:sections.bundle-extra-words.sections.headings.size.option_1",
+          "value": "heading-size--small"
+        }
+      ],
+      "default": "heading-size--xsmall"
+    },
+    {
+      "type": "checkbox",
+      "id": "gutter_decrease",
+      "label": "Abstand oben/unten verringern",
+      "default": false
+    },
+    {
+      "type": "select",
+      "id": "seo_h_tag",
+      "label": "SEO-Titel-Tag",
+      "options": [
+        { "value": "h1", "label": "H1" },
+        { "value": "h2", "label": "H2" },
+        { "value": "h3", "label": "H3" },
+        { "value": "h4", "label": "H4" },
+        { "value": "span", "label": "Span" }
+      ],
+      "default": "h2"
+    }
+  ],
+  "blocks": [
+    {
+      "type": "text",
+      "name": "Kontakt-Info",
+      "settings": [
+        {
+          "type": "text",
+          "id": "title",
+          "label": "Titel",
+          "default": "Kontaktinformationen"
+        },
+        {
+          "type": "richtext",
+          "id": "content",
+          "label": "Inhalt",
+          "default": "<p>Hier kannst du Adresse, Telefonnummer oder FAQ-Links einfügen.</p>"
+        },
+        {
+          "type": "select",
+          "id": "seo_h_tag",
+          "label": "SEO-Tag",
+          "options": [
+            { "value": "h1", "label": "H1" },
+            { "value": "h2", "label": "H2" },
+            { "value": "h3", "label": "H3" },
+            { "value": "h4", "label": "H4" },
+            { "value": "span", "label": "Span" }
+          ],
+          "default": "h3"
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Kontaktformular (erweitert)"
+    }
+  ],
+  "disabled_on": {
+    "groups": ["header"]
+  }
+}
+{% endschema %}

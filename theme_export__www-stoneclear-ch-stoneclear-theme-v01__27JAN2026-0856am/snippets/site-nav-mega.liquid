@@ -1,0 +1,300 @@
+{%- liquid
+	if type == 'classic' 
+		assign links_class = 'text-animation--underline-in-header'
+	elsif type == 'sidebar'
+		assign links_weight = 'text-weight--bold text-size--large' 
+  endif;
+-%}
+
+<li class="has-submenu submenu-is-mega-menu js-mega-menu-item" {{ shopify_attributes }}>
+
+  <a class="menu-link {{ links_weight }}"
+    {% if show_more_url %} href="{{ show_more_url }}" {% endif %}
+  >
+    <span><span  class="{{ links_class }}">{{ menu_name | escape }}</span></span>
+    <span class="icon">{%- render 'theme-symbols', icon: 'chevron' -%}</span>
+  </a>
+
+  <ul class="submenu mega-menu" id="SiteNavLabel-{{ link.handle }}-{{ type }}">
+
+    <div class="submenu-holder 
+      {% if type == 'classic' %} container--large {% endif %}
+      {% if show_promotion_1 or show_promotion_2 %} submenu-holder--promotion-width-{{ promotion_width }} {% endif %}
+      {% if show_promotion_1 and show_promotion_2 %} submenu-holder--promotion-both {% endif %}
+    ">
+
+      {%- if items -%}
+        
+        {%- if type == 'sidebar' -%}
+          <li class="submenu-back">
+            <a><span class="icon">{%- render 'theme-symbols', icon: 'chevron' -%}</span>{{ 'general.accessibility_labels.back' | t }}</a>
+          </li>
+        {%- endif -%}
+
+        <div class="grid grid--layout grid-6 grid-portable-2" style="width:100%">
+
+          {%- for item in items limit: products_limit -%}
+
+            {%- liquid 
+              if iscollection
+                assign image = item.featured_image
+              else
+                assign image = item.featured_media
+              endif
+            -%}
+
+            <a href="{{ item.url }}" title="{{ item.title | escape }}" class="product-item">
+            
+              {%- liquid
+                
+                if settings.product_card_aspect_ratio == 'natural'
+                  if item.media.size == 0 or blank_product
+                    assign aspect_ratio = 1
+                  else
+                    unless item.featured_media.aspect_ratio > 0
+                      assign aspect_ratio = 1
+                    else
+                      assign aspect_ratio = item.featured_media.aspect_ratio
+                    endunless
+                  endif
+                else
+                  assign aspect_ratio = settings.product_card_aspect_ratio
+                endif
+            
+              -%}
+            
+              <div
+                class="card__image product-item__image
+                {% if section_blocks.size == 0 %} product-item__image--no-text {% endif %}"
+                style="padding-top:{{ 100 | divided_by: aspect_ratio }}%"
+              >
+                {%- capture sizes -%}
+                  sizes="(max-width: {{ settings.theme_max_width }}px) calc((100vw - 200px) / 6), {{ settings.theme_max_width | divided_by: 6 }}px"
+                {%- endcapture -%}
+                
+                {%- liquid
+                  if image == blank
+                    echo 'image' | placeholder_svg_tag
+                  else
+                    if settings.product_card_border_radius > 0 
+                      assign image_class = 'product-item__image-figure lazy-image--zoom-animation lazy-image--to-reveal'
+                    else
+                      assign image_class = 'product-item__image-figure lazy-image--animation lazy-image--to-reveal'
+                    endif
+                    render 'lazy-image', image: image, alt: item.title, ratio: aspect_ratio, type: 'background', class: image_class, sizes: sizes
+                  endif
+                -%}
+            
+              </div>
+            
+              <div class="card__text product-item__text gutter-top--small spacing--large remove-empty-space">
+                
+                {%- if isproduct -%}
+                  <div 
+                    class="product-item__price text-size--small equalize-white-space" 
+                    {{ block.shopify_attributes }}
+                  >
+                    <div class="remove-line-height-space" data-js-product-item-price>
+                      {%- unless blank_product -%}
+                        {%- assign product_variant = item.selected_or_first_available_variant -%}
+                        {%- render 'product-price', target: item, variant: product_variant, product_price_varies: item.price_varies -%}
+                      {%- else -%}
+                        {{ 9999 | money }}
+                      {%- endunless -%}
+                    </div>
+                  </div>
+                {%- endif -%}
+                
+                <div class="product-item__title">
+                  <div class="remove-line-height-space--small">
+                    <span class="{{ links_class }} text-size--regular text-weight--bold">
+                      {%- liquid 
+                        unless blank_product 
+                          echo item.title | escape
+                        else 
+                          echo 'general.onboarding.product_title' | t
+                        endunless
+                      -%}
+                    </span>
+                  </div>
+                </div>
+            
+              </div>
+
+            </a>
+
+          {%- endfor -%}
+
+        </div>
+
+        {%- if show_more_label != blank -%}
+          <div class="mega-menu__footer">
+            {%- render 'button', label: show_more_label, link: show_more_url, style: 'outline button--outline-hover', label_is_translation: false -%}
+          </div>
+        {%- endif -%}
+
+      {%- else -%}
+
+        <div class="submenu-masonry 
+          {% if show_promotion_1 or show_promotion_2 %} 
+            with-promotion column-size--{{ promotion_width }}
+            {% if show_promotion_1 and show_promotion_2 %} 
+              column-size--both
+            {% endif %}
+          {% else %} 
+            without-promotion column-size--{{ promotion_width }}
+          {% endif %}"
+          data-columns="{%- liquid
+            if show_promotion_1 or show_promotion_2
+              if promotion_width == 'fourth'
+                if show_promotion_1 and show_promotion_2
+                  echo '2'
+                else
+                  echo '3'
+                endif
+              else
+                if show_promotion_1 and show_promotion_2
+                  echo '1'
+                else 
+                  echo '2'
+                endif
+              endif
+            else
+              if promotion_width == 'fourth'
+                echo '4'
+              else
+                echo '3'
+              endif
+            endif
+          -%}"
+        >
+
+          {%- if type == 'sidebar' -%}
+            <li class="submenu-back">
+              <a><span class="icon">{%- render 'theme-symbols', icon: 'chevron' -%}</span>{{ 'general.accessibility_labels.back' | t }}</a>
+            </li>
+          {%- endif -%}
+
+          {%- for link in linklists[linklist].links -%}
+
+            <li class="mega-link {% if link.links != blank %} has-babymenu {% endif %}">
+
+              <a class="menu-link {% unless link.links != blank %} no-focus-link {% endunless %} {{ links_weight }}" href="{{ link.url }}">
+                <span><span class="{{ links_class }}">{{ link.title | escape }}</span></span>
+                {%- if link.links != blank -%}
+                  <span class="icon">{%- render 'theme-symbols', icon: 'chevron' -%}</span>
+                {%- endif -%}
+              </a>
+
+              {%- if link.links != blank -%}
+                <div class="babymenu">
+                  <ul id="SiteNavLabel-{{ link.handle }}-{{ type }}">
+                    {%- if type == 'sidebar' -%}
+                      <li class="submenu-back">
+                        <a><span class="icon">{%- render 'theme-symbols', icon: 'chevron' -%}</span>{{ 'general.accessibility_labels.back' | t }}</a>
+                      </li>
+                    {%- endif -%}
+
+                    {% for childlink in link.links %}
+                      <li><a class="menu-link {% if childlink.active %} active {% endif %} no-focus-link {{ links_weight }}" href="{{ childlink.url }}"><span><span class="{{ links_class }}">{{ childlink.title | escape }}</span></span></a></li>
+                    {% endfor %}
+                  </ul>
+                </div>
+              {%- endif -%}
+
+            </li>
+
+          {%- endfor -%}
+
+        </div>
+
+        {%- if show_promotion_1 or show_promotion_2 -%}
+          {%- if promotion_width contains 'half' -%}
+            {% capture sizes -%}
+              (max-width: {{ settings.theme_max_width }}px) calc((100vw - 100px) / 2), {{ settings.theme_max_width | minus: 100 | divided_by: 2 }}px"
+            {%- endcapture -%}
+          {%- elsif promotion_width contains 'third' -%}
+            {% capture sizes -%}
+              (max-width: {{ settings.theme_max_width }}px) calc((100vw - 100px) / 1.33), {{ settings.theme_max_width | minus: 100 | divided_by: 1.33 }}px"
+            {%- endcapture -%}
+          {%- else  -%}
+            {% capture sizes -%}
+              (max-width: {{ settings.theme_max_width }}px) calc((100vw - 100px) / 4), {{ settings.theme_max_width | minus: 100 | divided_by: 4 }}px"
+            {%- endcapture -%}
+          {%- endif -%}
+          {% assign sizes = sizes | prepend: 'sizes="(max-width: 474px) calc(100vw - 40px), (max-width: 1023px) 335px, ' -%}
+        {%- endif -%}
+
+        {%- if image_border_radius > 0 -%}
+          {% style %}
+            #SiteNavLabel-{{ link.handle }}-{{ type }} figure,
+            #SiteNavLabel-{{ link.handle }}-{{ type }} img,
+            #SiteNavLabel-{{ link.handle }}-{{ type }} a.menu-promotion-background-image {
+              border-radius: {{ image_border_radius }}px;
+            }
+          {% endstyle %}
+        {%- endif -%}
+
+        {%- if show_promotion_1 -%}
+
+          <li class="mega-link has-promotion">
+
+            <div class="menu-promotion">
+  
+              {% if promotion_image_link_1 != blank %} <a href="{{ promotion_image_link_1 }}" {% else %} <div {% endif %}
+                class="menu-promotion-background-image"
+              >
+                {%- liquid
+                  unless promotion_image_1 == blank 
+                    render 'lazy-image', image: promotion_image_1, sizes: sizes
+                  endunless
+                -%}
+              {%- if promotion_image_link_1 != blank -%} </a> {%- else -%} </div> {%- endif -%}
+
+              {%- unless promotion_content_1 == empty -%}
+                <div class="menu-promotion-content gutter-top--small rte remove-empty-space">
+                  {{ promotion_content_1 }}
+                </div>
+              {%- endunless -%}
+
+            </div>
+
+          </li>
+
+        {%- endif -%} 
+        
+        {%- if show_promotion_2 -%}
+
+          <li class="mega-link has-promotion">
+
+            <div class="menu-promotion">
+  
+              {% if promotion_image_link_2 != blank %} <a href="{{ promotion_image_link_2 }}" {% else %} <div {% endif %}
+                class="menu-promotion-background-image"
+              >
+                {%- liquid
+                  unless promotion_image_2 == blank 
+                    render 'lazy-image', image: promotion_image_2, sizes: sizes
+                  endunless
+                -%}
+              {%- if promotion_image_link_2 != blank -%} </a> {%- else -%} </div> {%- endif -%}
+
+              {%- unless promotion_content_2 == empty -%}
+                <div class="menu-promotion-content gutter-top--small rte remove-empty-space">
+                  {{ promotion_content_2 }}
+                </div>
+              {%- endunless -%}
+
+            </div>
+
+          </li>
+
+        {%- endif -%}
+
+      {%- endif -%}
+
+    </div>
+
+  </ul>
+
+</li>

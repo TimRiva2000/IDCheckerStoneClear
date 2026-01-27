@@ -1,0 +1,109 @@
+{%- liquid 
+
+  if section.settings.center 
+    assign containter_size = 'compact'
+  else
+    assign containter_size = 'large'
+  endif
+
+  if section.settings.page_cover_metafield != blank
+    assign metafield_keys = section.settings.page_cover_metafield | split: '.'
+    assign metafield_value = page.metafields[metafield_keys[0]][metafield_keys[1]]
+    if metafield_value != blank
+      assign cover_image = metafield_value | image_url
+    endif              
+  endif
+
+-%}
+
+{%- if cover_image -%}
+
+  <div class="container--fullwidth reduce-margin-if-first" id="element-{{ section.id }}">
+    <div class="card align-content align-content--horizontal-left align-content--vertical-bottom margin-bottom--large element--height-{{ section.settings.height }}">
+      <div class="container--large container--vertical-space-small" style="z-index:9">
+        <div class="card__text gutter-bottom--large spacing--small remove-empty-space" style="margin:0">
+          {%- render 'breadcrumb' container: '', vertical_space: '', style: 'breadcrumb-main--margin' -%}
+          <h1 class="title heading-size--page-title container--vertical-space-small">{{ page.title | escape }}</h1>
+        </div>
+      </div>
+      <div class="card__image card__image--background {% if section.settings.color_background_main != "rgba(0,0,0,0)" %} card__image--with-overlay {% endif %}" aria-hidden="true">
+        {%- render 'lazy-image', image: cover_image, type: 'background', alt: page.title, sizes: 'sizes="100vw"', class: 'lazy-image--to-reveal', id: section.id, overlay: true -%} 
+      </div>
+      {%- render 'custom-colors', id: section.id, text: section.settings.color_text_main, background: section.settings.color_background_main, hide_borders: true -%}
+    </div>
+  </div>
+
+{%- else -%}
+
+  {%- render 'breadcrumb' container: containter_size, vertical_space: 'vertical-space-xsmall', style: 'breadcrumb-main--margin' -%}
+
+{%- endif -%}
+
+<div class="container container--{{ containter_size }} container--vertical-space{% unless cover_image %}-small{% endunless %} main-page gutter-bottom--page">
+
+  {%- unless cover_image -%}
+    <h1 class="title heading-size--page-title">{{ page.title | escape }}</h1>
+  {%- endunless -%}
+
+  <div class="rte {% unless cover_image %}gutter-top--small{% endunless %}">
+    {{ page.content }}
+  </div>
+
+</div>
+
+{% schema %}
+  {
+    "name": "t:sections.main-page.name",
+    "class": "section--remove-bottom-margin-after",
+    "settings": [
+      {
+        "type": "checkbox",
+        "id": "center",
+        "label": "t:sections.local-extra-words.sections.main-page.settings.center.label",
+        "default": false
+      },
+      {
+        "type": "header",
+        "content": "t:sections.bundle-extra-words.sections.main-page.cover.header"
+      },
+      {
+        "type": "paragraph",
+        "content": "t:sections.bundle-extra-words.sections.main-page.cover.content"
+      },
+      {
+        "type": "text",
+        "id": "page_cover_metafield",
+        "label": "t:sections.bundle-extra-words.sections.main-page.cover.settings.cover_metafield",
+        "info": "custom.cover_image"
+      },
+      {
+        "type": "color",
+        "id": "color_background_main",
+        "label": "t:sections.local-extra-words.settings_schema.colors.settings.overlay",
+        "default": "rgba(0,0,0,0)"
+      },
+      {
+        "type": "color",
+        "id": "color_text_main",
+        "label": "t:sections.split-extra-words.settings_schema.colors.settings.text",
+        "default": "rgba(0,0,0,0)"
+      },
+      {
+        "type": "select",
+        "id": "height",
+        "label": "t:sections.bundle-extra-words.sections.main-collection.settings.image_banner.height",
+        "options": [
+          {
+            "value": "small",
+            "label": "t:sections.local-extra-words.sections.media-with-text-overlay.settings.option__1"
+          },
+          {
+            "value": "regular",
+            "label": "t:sections.local-extra-words.sections.media-with-text-overlay.settings.option__2"
+          }
+        ],
+        "default": "small"
+      }
+    ]
+  }
+{% endschema %}

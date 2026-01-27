@@ -1,0 +1,346 @@
+.css-slider.css-slider--overlay-navigation .css-slider-dot-navigation[style*=block], .css-slider:not(.css-slider--scrollbars-visible) .css-slider-holder {
+  overflow: -moz-scrollbars-none;
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+.css-slider.css-slider--overlay-navigation .css-slider-dot-navigation[style*=block]::-webkit-scrollbar, .css-slider:not(.css-slider--scrollbars-visible) .css-slider-holder::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.css-slider.css-slider--overlay-navigation .css-slider-navigation-container {
+  position: absolute;
+  top: 0;
+  width: 100%;
+  height: 100%;
+}
+html[dir=rtl] .css-slider.css-slider--overlay-navigation .css-slider-navigation-container, .css-slider.css-slider--overlay-navigation html[dir=rtl] .css-slider-navigation-container {
+  right: 0;
+}
+html[dir=ltr] .css-slider.css-slider--overlay-navigation .css-slider-navigation-container, .css-slider.css-slider--overlay-navigation html[dir=ltr] .css-slider-navigation-container {
+  left: 0;
+}
+
+.css-slider {
+  width: 100%;
+  position: relative;
+}
+.css-slider.enabled {
+  display: block;
+}
+
+.css-slider-viewport {
+  width: 100%;
+}
+
+.css-slider-holder {
+  overflow-y: hidden;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  scroll-snap-type: x mandatory;
+  cursor: grab;
+}
+.css-slider-holder.mouse-down {
+  cursor: grabbing;
+}
+.css-slider-holder.dragging *, .css-slider-holder.pointer-events-off * {
+  pointer-events: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+.css-slider-holder.mouse-fallback, .css-slider-holder.disable-snapping, .css-slider-holder.force-disable-snapping, .css-slider.css-slider--no-snap .css-slider-holder {
+  scroll-behavior: unset;
+  scroll-snap-type: none;
+}
+
+css-slider:not(.enabled) .grid--slider {
+  overflow: -moz-scrollbars-none;
+  -ms-overflow-style: none;
+  overflow-x: auto;
+}
+css-slider:not(.enabled) .grid--slider::-webkit-scrollbar {
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.css-slide--snap {
+  scroll-snap-align: start;
+}
+
+.css-slider--singular, .css-slider--singular .css-slider-holder {
+  cursor: default;
+}
+.css-slider--singular .css-slider-navigation-container {
+  display: none;
+}
+
+.css-slider--no-drag {
+  cursor: default !important;
+}
+
+.css-slider--no-desktop-drag .css-slider-holder {
+  cursor: default !important;
+}
+
+.css-slider-viewport.auto-height {
+  overflow: hidden;
+  transition: height 200ms linear;
+}
+.css-slider-viewport.auto-height .css-slide {
+  height: fit-content;
+}
+
+.css-slider-button {
+  border-radius: 100%;
+  width: 2.5rem;
+  height: 2.5rem;
+  transition: all 175ms linear;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0.8;
+}
+html[dir=rtl] .css-slider-button svg {
+  transform: rotate(180deg);
+}
+.css-slider-button.css-slider-prev:after, .css-slider-button.css-slider-next:before {
+  content: "";
+  width: 0;
+  height: 1px;
+  display: inline-block;
+  background-color: black;
+  transition: ease 175ms width;
+}
+.css-slider-button.css-slider-prev:after {
+  margin-inline-start: -0.3125rem;
+}
+.css-slider-button.css-slider-next:before {
+  margin-inline-end: -0.3125rem;
+}
+.no-touchevents .css-slider-button:hover:after, .no-touchevents .css-slider-button:hover:before {
+  width: 18px;
+}
+.css-slider-button.disabled {
+  opacity: 0.3;
+  cursor: auto;
+  pointer-events: none;
+}
+.css-slider-button[style*=block] {
+  display: flex !important;
+}
+.no-touchevents .css-slider-button:not(.disabled):hover {
+  opacity: 1;
+}
+.css-slider-button svg path {
+  fill: var(--color-text-main);
+}
+
+.css-slider:not(.css-slider--overlay-navigation) .css-slider-navigation-container {
+  margin-top: 0.625rem;
+  margin-bottom: -0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.css-slider:not(.css-slider--overlay-navigation) .css-slider-navigation-container .css-slider-prev {
+  order: 1;
+}
+.css-slider:not(.css-slider--overlay-navigation) .css-slider-navigation-container .css-slider-dot-navigation {
+  order: 2;
+}
+@media screen and (max-width: 767px) {
+  .css-slider:not(.css-slider--overlay-navigation) .css-slider-navigation-container .css-slider-dot-navigation {
+    margin-top: 0.0625rem;
+  }
+}
+.css-slider:not(.css-slider--overlay-navigation) .css-slider-navigation-container .css-slider-next {
+  order: 3;
+}
+.css-slider:not(.css-slider--overlay-navigation) .css-slider-dot-navigation {
+  width: fit-content;
+  height: auto;
+  border-radius: 0.625rem;
+  margin-top: 0.125rem;
+}
+.css-slider:not(.css-slider--overlay-navigation) .css-slider-dot-navigation .css-slider-dot {
+  width: 1.875rem;
+  max-width: calc(100% / var(--size));
+  height: 0.375rem;
+  transform: translateY(-50%);
+  display: inline-block;
+  transition: none;
+  cursor: pointer;
+  background: var(--color-text-main);
+  pointer-events: all;
+}
+.css-slider:not(.css-slider--overlay-navigation) .css-slider-dot-navigation .css-slider-dot:first-child {
+  border-radius: 0.625rem 0 0 0.625rem;
+}
+html[dir=rtl] .css-slider:not(.css-slider--overlay-navigation) .css-slider-dot-navigation .css-slider-dot:first-child {
+  border-radius: 0 0.625rem 0.625rem 0;
+}
+.css-slider:not(.css-slider--overlay-navigation) .css-slider-dot-navigation .css-slider-dot:last-child {
+  border-radius: 0 0.625rem 0.625rem 0;
+}
+html[dir=rtl] .css-slider:not(.css-slider--overlay-navigation) .css-slider-dot-navigation .css-slider-dot:last-child {
+  border-radius: 0.625rem 0 0 0.625rem;
+}
+.css-slider:not(.css-slider--overlay-navigation) .css-slider-dot-navigation .css-slider-dot.active {
+  background: var(--color-text-main);
+}
+.css-slider:not(.css-slider--overlay-navigation) .css-slider-dot-navigation .css-slider-dot.active:first-child {
+  border-radius: 0.625rem;
+}
+.css-slider:not(.css-slider--overlay-navigation) .css-slider-dot-navigation .css-slider-dot.active:not(:first-child) {
+  border-radius: 0 0.625rem 0.625rem 0;
+}
+html[dir=rtl] .css-slider:not(.css-slider--overlay-navigation) .css-slider-dot-navigation .css-slider-dot.active:not(:first-child) {
+  border-radius: 0.625rem 0 0 0.625rem;
+}
+.css-slider:not(.css-slider--overlay-navigation) .css-slider-dot-navigation .css-slider-dot.active ~ .css-slider-dot {
+  background: var(--color-secondary-background-main);
+}
+
+.css-slider.css-slider--overlay-navigation .css-slider-navigation-container {
+  z-index: 99;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  pointer-events: none;
+}
+.no-touchevents .css-slider.css-slider--overlay-navigation:hover .css-slider-button {
+  opacity: 1;
+}
+.css-slider.css-slider--overlay-navigation .css-slider-button {
+  position: relative;
+  width: 2.8125rem;
+  height: 2.8125rem;
+  opacity: 0;
+  pointer-events: all;
+  direction: ltr;
+}
+.css-slider.css-slider--overlay-navigation .css-slider-button:before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1.5625rem;
+  height: 1.5625rem;
+  border-radius: 100%;
+  transform: translate(-50%, -50%);
+  background-color: var(--color-background-main);
+  transition: background-color 175ms linear;
+  transform-origin: center;
+}
+.css-slider.css-slider--overlay-navigation .css-slider-button svg {
+  position: absolute;
+  width: 0.625rem;
+  z-index: 9;
+}
+.css-slider.css-slider--overlay-navigation .css-slider-button svg path {
+  fill: var(--color-text-main);
+  transition: fill 175ms linear;
+}
+.css-slider.css-slider--overlay-navigation .css-slider-button.css-slider-next svg {
+  margin-inline-start: 1px;
+}
+html[dir=rtl] .css-slider.css-slider--overlay-navigation .css-slider-button.css-slider-next svg {
+  margin-inline-start: -1px;
+  transform: rotate(0deg) !important;
+}
+.css-slider.css-slider--overlay-navigation .css-slider-button.css-slider-prev svg {
+  margin-inline-start: -1px;
+}
+html[dir=rtl] .css-slider.css-slider--overlay-navigation .css-slider-button.css-slider-prev svg {
+  transform: rotate(180deg);
+  margin-inline-start: 1px;
+}
+.no-touchevents .css-slider.css-slider--overlay-navigation .css-slider-button:hover:before {
+  background-color: var(--color-text-main);
+}
+.no-touchevents .css-slider.css-slider--overlay-navigation .css-slider-button:hover svg path {
+  fill: var(--color-background-main);
+}
+.css-slider.css-slider--overlay-navigation .css-slider-button.disabled {
+  opacity: 0 !important;
+}
+.css-slider.css-slider--overlay-navigation .css-slider-dot-navigation {
+  width: 95%;
+  margin-top: 20px;
+  position: absolute;
+  bottom: 0.75rem;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.css-slider.css-slider--overlay-navigation .css-slider-dot-navigation[style*=block] {
+  display: flex !important;
+  flex-wrap: nowrap;
+  overflow-x: scroll;
+  justify-content: center;
+}
+.css-slider.css-slider--overlay-navigation .css-slider-dot-navigation .css-slider-dot {
+  flex-shrink: 0;
+  width: 0.375rem;
+  height: 0.375rem;
+  display: inline-block;
+  margin: 0 0.125rem;
+  border-radius: 0.375rem;
+  transition: all 175ms linear;
+  cursor: pointer;
+  background-color: var(--color-text-main);
+  opacity: 0.2;
+  position: relative;
+}
+.no-touchevents .css-slider.css-slider--overlay-navigation .css-slider-dot-navigation .css-slider-dot:not(.active):hover {
+  opacity: 0.5;
+}
+.css-slider.css-slider--overlay-navigation .css-slider-dot-navigation .css-slider-dot.active {
+  opacity: 1;
+}
+
+.css-slider--scrollbars-visible:after {
+  content: "";
+  position: absolute;
+  width: 1.875rem;
+  height: 100%;
+  background: var(--color-background-main);
+  background: linear-gradient(-90deg, var(--color-background-main) 0%, var(--color-opacity-background-main) 100%);
+  top: 0;
+  pointer-events: none;
+}
+html[dir=rtl] .css-slider--scrollbars-visible:after {
+  left: 0;
+}
+html[dir=ltr] .css-slider--scrollbars-visible:after {
+  right: 0;
+}
+.css-slider--scrollbars-visible .css-slider-holder {
+  padding: 0.0625rem 0.0625rem 0.3125rem;
+  margin-bottom: -0.3125rem;
+  scroll-padding-left: 0.0625rem;
+  scroll-padding-right: 0.0625rem;
+}
+.no-touchevents .css-slider--scrollbars-visible .css-slider-holder:hover::-webkit-scrollbar-track, .no-touchevents .css-slider--scrollbars-visible .css-slider-holder:hover::-webkit-scrollbar, .no-touchevents .css-slider--scrollbars-visible .css-slider-holder:hover::-webkit-scrollbar-thumb {
+  visibility: visible;
+}
+.css-slider--scrollbars-visible .css-slider-holder::-webkit-scrollbar-track {
+  box-shadow: unset;
+  background-color: var(--color-background-main);
+  border: none;
+  visibility: hidden;
+}
+.css-slider--scrollbars-visible .css-slider-holder::-webkit-scrollbar {
+  width: 0.3125rem;
+  height: 0.3125rem;
+  background-color: var(--color-background-main);
+  visibility: hidden;
+}
+.css-slider--scrollbars-visible .css-slider-holder::-webkit-scrollbar-thumb {
+  background-color: var(--color-borders-main);
+  border: none;
+  border-radius: 0.625rem;
+  height: 0.3125rem;
+  width: 0.3125rem;
+  visibility: hidden;
+}
