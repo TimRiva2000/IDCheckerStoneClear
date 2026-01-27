@@ -26,9 +26,11 @@ CORS(app, resources={r"/verify": {"origins": cors_origins}})
 
 MIN_AGE = int(os.getenv("MIN_AGE", "18"))
 MOCK_VERIFIED = os.getenv("MOCK_VERIFIED", "false").lower() in ("1", "true", "yes")
+DEBUG_OCR = os.getenv("DEBUG_OCR", "false").lower() in ("1", "true", "yes")
 OCR_LANGS = os.getenv("OCR_LANGS", "eng")
 OCR_MAX_DIM = int(os.getenv("OCR_MAX_DIM", "1200"))
 MRZ_CROP_RATIO = float(os.getenv("MRZ_CROP_RATIO", "0.35"))
+DOB_CROP_RATIO = float(os.getenv("DOB_CROP_RATIO", "0.55"))
 
 DATE_PATTERNS = [
     r"\b(\d{2})[./-](\d{2})[./-](\d{4})\b",  # DD.MM.YYYY or MM/DD/YYYY
@@ -167,20 +169,34 @@ def _run_mrz_ocr(image):
     except Exception:
         return ""
 
-
-def _run_ocr(image_bytes):
-    if pytesseract is None or Image is None:
+def _run_dob_ocr(image):
+    width, height = image.size
+    crop_top = int(height * DOB_CROP_RATIO)
+    region = image.crop((0, crop_top, width, height))
+    region = _preprocess_image(region)
+    config = "--oem 3 --psm 6 -c tessedit_char_whitelist=0123456789./- "
+    try:
+        return pytesseract.image_to_string(region, lang="eng", config=config)
+    except Exception:
         return ""
+
+def _run_ocr_with_debug(image_bytes):
+    if pytesseract is None or Image is None:
+        return "", {}
     try:
         image = Image.open(io.BytesIO(image_bytes))
         mrz_text = _run_mrz_ocr(image)
         if mrz_text:
-            return mrz_text
+            return mrz_text, {"mrz_text": mrz_text}
+        dob_text = _run_dob_ocr(image)
+        if dob_text:
+            return dob_text, {"dob_text": dob_text}
         image = _preprocess_image(image)
         config = "--oem 3 --psm 6"
-        return pytesseract.image_to_string(image, lang=OCR_LANGS, config=config)
+        full_text = pytesseract.image_to_string(image, lang=OCR_LANGS, config=config)
+        return full_text, {"full_text": full_text}
     except Exception:
-        return ""
+        return "", {}
 
 
 @app.route("/verify", methods=["POST"])
@@ -199,22 +215,26 @@ def verify():
     if not image_bytes:
         return jsonify({"verified": False, "error": "empty_file"}), 400
 
-    text = _run_ocr(image_bytes)
+    text, debug = _run_ocr_with_debug(image_bytes)
     dob = _extract_dob(text)
     if not dob:
-        return jsonify({"verified": False, "error": "dob_not_found"}), 200
+        response = {"verified": False, "error": "dob_not_found"}
+        if DEBUG_OCR:
+            response["debug"] = debug
+        return jsonify(response), 200
 
     age = _calculate_age(dob)
     verified = age >= MIN_AGE
 
-    return jsonify(
-        {
-            "verified": verified,
-            "age": age,
-            "dob": dob.isoformat(),
-            "source": "ocr",
-        }
-    )
+    response = {
+        "verified": verified,
+        "age": age,
+        "dob": dob.isoformat(),
+        "source": "ocr",
+    }
+    if DEBUG_OCR:
+        response["debug"] = debug
+    return jsonify(response)
 
 
 @app.route("/health", methods=["GET"])
