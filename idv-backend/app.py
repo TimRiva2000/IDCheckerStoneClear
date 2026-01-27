@@ -36,6 +36,8 @@ DATE_PATTERNS = [
     r"\b(\d{2})[./-](\d{2})[./-](\d{4})\b",  # DD.MM.YYYY or MM/DD/YYYY
     r"\b(\d{2})\s+(\d{2})\s+(\d{4})\b",      # DD MM YYYY
     r"\b(\d{4})[./-](\d{2})[./-](\d{2})\b",  # YYYY-MM-DD
+    r"\b(\d{2})(\d{2})(\d{4})\b",            # DDMMYYYY
+    r"\b(\d{4})(\d{2})(\d{2})\b",            # YYYYMMDD
 ]
 
 DOB_LABELS = [
@@ -92,6 +94,33 @@ def _extract_dob(text):
     mrz_dob = _extract_mrz_dob(lines)
     if mrz_dob:
         return mrz_dob
+
+    # Heuristic: parse any 6-digit (YYMMDD) or 8-digit (DDMMYYYY) sequences
+    compact = re.sub(r"[^0-9]", " ", text)
+    for match in re.finditer(r"\b\d{8}\b", compact):
+        raw = match.group(0)
+        for pattern in (r"(\d{2})(\d{2})(\d{4})", r"(\d{4})(\d{2})(\d{2})"):
+            m = re.match(pattern, raw)
+            if m:
+                parsed = _parse_date_parts(m.groups())
+                if isinstance(parsed, tuple):
+                    parsed = parsed[0]
+                if parsed:
+                    return parsed
+
+    for match in re.finditer(r"\b\d{6}\b", compact):
+        raw = match.group(0)
+        yy = int(raw[0:2])
+        mm = int(raw[2:4])
+        dd = int(raw[4:6])
+        today = date.today()
+        century = 1900 if yy > today.year % 100 else 2000
+        try:
+            candidate = date(century + yy, mm, dd)
+            if candidate <= today and candidate.year >= today.year - 120:
+                return candidate
+        except Exception:
+            continue
 
     # Look for DOB labels and scan nearby lines
     for idx, line in enumerate(lines):
