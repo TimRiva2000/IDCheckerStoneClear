@@ -16,6 +16,13 @@ try:
 except Exception:
     pytesseract = None
 
+try:
+    import numpy as np
+    from paddleocr import PaddleOCR
+except Exception:
+    np = None
+    PaddleOCR = None
+
 app = Flask(__name__)
 
 max_bytes = int(os.getenv("MAX_UPLOAD_BYTES", "5242880"))
@@ -27,10 +34,14 @@ CORS(app, resources={r"/verify": {"origins": cors_origins}})
 MIN_AGE = int(os.getenv("MIN_AGE", "18"))
 MOCK_VERIFIED = os.getenv("MOCK_VERIFIED", "false").lower() in ("1", "true", "yes")
 DEBUG_OCR = os.getenv("DEBUG_OCR", "false").lower() in ("1", "true", "yes")
+OCR_ENGINE = os.getenv("OCR_ENGINE", "paddle").lower()
 OCR_LANGS = os.getenv("OCR_LANGS", "eng")
 OCR_MAX_DIM = int(os.getenv("OCR_MAX_DIM", "1200"))
 MRZ_CROP_RATIO = float(os.getenv("MRZ_CROP_RATIO", "0.35"))
 DOB_CROP_RATIO = float(os.getenv("DOB_CROP_RATIO", "0.55"))
+
+_PADDLE_AVAILABLE = PaddleOCR is not None and np is not None
+_PADDLE_INSTANCE = None
 
 DATE_PATTERNS = [
     r"\b(\d{2})[./-](\d{2})[./-](\d{4})\b",  # DD.MM.YYYY or MM/DD/YYYY
@@ -239,6 +250,39 @@ def _preprocess_image(image):
         image = image.resize((width * 2, height * 2))
     return image
 
+def _get_paddle():
+    global _PADDLE_INSTANCE
+    if _PADDLE_INSTANCE is None:
+        _PADDLE_INSTANCE = PaddleOCR(use_angle_cls=True, lang="en", show_log=False)
+    return _PADDLE_INSTANCE
+
+def _resize_for_ocr(image):
+    width, height = image.size
+    if max(width, height) > OCR_MAX_DIM:
+        scale = OCR_MAX_DIM / float(max(width, height))
+        return image.resize((int(width * scale), int(height * scale)))
+    return image
+
+def _run_paddle_ocr(image, crop_box=None):
+    if not _PADDLE_AVAILABLE or Image is None:
+        return ""
+    if crop_box:
+        image = image.crop(crop_box)
+    image = ImageOps.exif_transpose(image).convert("RGB")
+    image = _resize_for_ocr(image)
+    arr = np.array(image)
+    try:
+        result = _get_paddle().ocr(arr, cls=True)
+    except Exception:
+        return ""
+    if not result:
+        return ""
+    lines = []
+    for line in result[0]:
+        if len(line) > 1 and isinstance(line[1], (list, tuple)):
+            lines.append(line[1][0])
+    return "\n".join(lines)
+
 
 def _run_mrz_ocr(image):
     # Focus on the MRZ (bottom area) to reduce OCR cost and improve accuracy
@@ -270,10 +314,23 @@ def _run_dob_ocr(image):
         return ""
 
 def _run_ocr_with_debug(image_bytes):
-    if pytesseract is None or Image is None:
+    if Image is None:
         return "", {}
     try:
         image = Image.open(io.BytesIO(image_bytes))
+        if OCR_ENGINE in ("paddle", "auto") and _PADDLE_AVAILABLE:
+            width, height = image.size
+            mrz_box = (0, int(height * (1 - MRZ_CROP_RATIO)), width, height)
+            dob_box = (0, int(height * DOB_CROP_RATIO), width, height)
+            mrz_text = _run_paddle_ocr(image, crop_box=mrz_box)
+            if _looks_like_mrz(mrz_text):
+                return mrz_text, {"mrz_text": mrz_text}
+            dob_text = _run_paddle_ocr(image, crop_box=dob_box)
+            if dob_text:
+                return dob_text, {"dob_text": dob_text}
+            full_text = _run_paddle_ocr(image)
+            return full_text, {"full_text": full_text}
+
         mrz_text = _run_mrz_ocr(image)
         if _looks_like_mrz(mrz_text):
             return mrz_text, {"mrz_text": mrz_text}

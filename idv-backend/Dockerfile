@@ -6,6 +6,7 @@ RUN apt-get update \
     tesseract-ocr-deu \
     tesseract-ocr-fra \
     tesseract-ocr-ita \
+    libgomp1 \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app

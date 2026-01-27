@@ -8,6 +8,8 @@ services:
     envVars:
       - key: MIN_AGE
         value: "18"
+      - key: OCR_ENGINE
+        value: "paddle"
       - key: OCR_LANGS
         value: "eng"
       - key: OCR_MAX_DIM
