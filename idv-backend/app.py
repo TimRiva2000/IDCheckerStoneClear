@@ -26,6 +26,9 @@ CORS(app, resources={r"/verify": {"origins": cors_origins}})
 
 MIN_AGE = int(os.getenv("MIN_AGE", "18"))
 MOCK_VERIFIED = os.getenv("MOCK_VERIFIED", "false").lower() in ("1", "true", "yes")
+OCR_LANGS = os.getenv("OCR_LANGS", "eng")
+OCR_MAX_DIM = int(os.getenv("OCR_MAX_DIM", "1200"))
+MRZ_CROP_RATIO = float(os.getenv("MRZ_CROP_RATIO", "0.35"))
 
 DATE_PATTERNS = [
     r"\b(\d{2})[./-](\d{2})[./-](\d{4})\b",  # DD.MM.YYYY or MM/DD/YYYY
@@ -144,13 +147,25 @@ def _preprocess_image(image):
     image = ImageOps.autocontrast(image)
     image = image.filter(ImageFilter.SHARPEN)
     width, height = image.size
-    max_dim = 1600
-    if max(width, height) > max_dim:
-        scale = max_dim / float(max(width, height))
+    if max(width, height) > OCR_MAX_DIM:
+        scale = OCR_MAX_DIM / float(max(width, height))
         image = image.resize((int(width * scale), int(height * scale)))
-    elif max(width, height) < 900:
+    elif max(width, height) < 800:
         image = image.resize((width * 2, height * 2))
     return image
+
+
+def _run_mrz_ocr(image):
+    # Focus on the MRZ (bottom area) to reduce OCR cost and improve accuracy
+    width, height = image.size
+    crop_top = int(height * (1 - MRZ_CROP_RATIO))
+    mrz = image.crop((0, crop_top, width, height))
+    mrz = _preprocess_image(mrz)
+    config = "--oem 3 --psm 6 -c tessedit_char_whitelist=ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789<"
+    try:
+        return pytesseract.image_to_string(mrz, lang="eng", config=config)
+    except Exception:
+        return ""
 
 
 def _run_ocr(image_bytes):
@@ -158,10 +173,12 @@ def _run_ocr(image_bytes):
         return ""
     try:
         image = Image.open(io.BytesIO(image_bytes))
+        mrz_text = _run_mrz_ocr(image)
+        if mrz_text:
+            return mrz_text
         image = _preprocess_image(image)
         config = "--oem 3 --psm 6"
-        # Requires language packs installed in Dockerfile
-        return pytesseract.image_to_string(image, lang="eng+deu+fra+ita", config=config)
+        return pytesseract.image_to_string(image, lang=OCR_LANGS, config=config)
     except Exception:
         return ""
 

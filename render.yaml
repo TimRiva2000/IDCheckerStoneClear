@@ -8,6 +8,12 @@ services:
     envVars:
       - key: MIN_AGE
         value: "18"
+      - key: OCR_LANGS
+        value: "eng"
+      - key: OCR_MAX_DIM
+        value: "1200"
+      - key: MRZ_CROP_RATIO
+        value: "0.35"
       - key: MAX_UPLOAD_BYTES
         value: "5242880"
       - key: CORS_ALLOWED_ORIGINS
