@@ -55,12 +55,61 @@
     status.classList.toggle('idv-block__status--success', !isError && Boolean(message));
   };
 
+  const setManualVisible = (root, visible) => {
+    const manual = root.querySelector('[data-idv-dob]');
+    if (!manual) return;
+    manual.hidden = !visible;
+  };
+
   const setBusy = (root, busy) => {
     const button = root.querySelector('[data-idv-submit]');
     const fileInput = root.querySelector('[data-idv-file]');
     if (button) {
       button.disabled = busy || !fileInput || !fileInput.files || fileInput.files.length === 0;
       button.setAttribute('aria-busy', busy ? 'true' : 'false');
+    }
+  };
+
+  const verifyDob = async (root, dobValue) => {
+    const endpoint = root.getAttribute('data-idv-endpoint');
+    if (!endpoint) {
+      setStatus(root, 'Verification service is not configured.', true);
+      return;
+    }
+
+    setStatus(root, 'Verifying date of birth...');
+
+    const formData = new FormData();
+    formData.append('dob', dobValue);
+    if (window.Shopify && Shopify.shop) {
+      formData.append('shop', Shopify.shop);
+    }
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error('Request failed');
+      }
+
+      const data = await response.json();
+      if (data && data.verified === true) {
+        setVerified(true);
+        await updateCartAttribute(true);
+        setManualVisible(root, false);
+      } else if (data && data.error === 'invalid_dob') {
+        setVerified(false);
+        setStatus(root, 'Please enter a valid date of birth.', true);
+      } else {
+        setVerified(false);
+        setStatus(root, 'We could not verify your age with that date.', true);
+      }
+    } catch (error) {
+      setVerified(false);
+      setStatus(root, 'Verification failed. Please try again.', true);
     }
   };
 
@@ -113,9 +162,15 @@
       if (data && data.verified === true) {
         setVerified(true);
         await updateCartAttribute(true);
+        setManualVisible(root, false);
       } else {
         setVerified(false);
-        setStatus(root, 'We could not verify your age. Please try another photo.', true);
+        if (data && data.error === 'dob_not_found') {
+          setStatus(root, 'We could not read the date of birth. Please enter it below.', true);
+          setManualVisible(root, true);
+        } else {
+          setStatus(root, 'We could not verify your age. Please try another photo.', true);
+        }
       }
     } catch (error) {
       setVerified(false);
@@ -131,11 +186,14 @@
 
     const fileInput = root.querySelector('[data-idv-file]');
     const button = root.querySelector('[data-idv-submit]');
+    const dobInput = root.querySelector('[data-idv-dob-input]');
+    const dobButton = root.querySelector('[data-idv-dob-submit]');
 
     if (fileInput) {
       fileInput.addEventListener('change', () => {
         setStatus(root, '');
         setBusy(root, false);
+        setManualVisible(root, false);
       });
     }
 
@@ -146,6 +204,16 @@
           return;
         }
         verifyFile(root, fileInput.files[0]);
+      });
+    }
+
+    if (dobButton) {
+      dobButton.addEventListener('click', () => {
+        if (!dobInput || !dobInput.value) {
+          setStatus(root, 'Please enter your date of birth.', true);
+          return;
+        }
+        verifyDob(root, dobInput.value);
       });
     }
 

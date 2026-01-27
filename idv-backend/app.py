@@ -313,6 +313,25 @@ def _run_dob_ocr(image):
     except Exception:
         return ""
 
+
+def _run_legacy_dob_ocr(image):
+    # Older Swiss ID: DOB is in the lower-left quadrant
+    width, height = image.size
+    left = 0
+    right = int(width * 0.6)
+    top = int(height * 0.58)
+    bottom = int(height * 0.85)
+    region = image.crop((left, top, right, bottom))
+    region = ImageOps.exif_transpose(region).convert("L")
+    region = ImageOps.autocontrast(region)
+    # Strong binarization to help tiny digits
+    region = region.point(lambda x: 255 if x > 160 else 0)
+    config = "--oem 3 --psm 6 -c tessedit_char_whitelist=0123456789./- "
+    try:
+        return pytesseract.image_to_string(region, lang="eng", config=config)
+    except Exception:
+        return ""
+
 def _run_ocr_with_debug(image_bytes):
     if Image is None:
         return "", {}
@@ -328,6 +347,9 @@ def _run_ocr_with_debug(image_bytes):
             dob_text = _run_paddle_ocr(image, crop_box=dob_box)
             if dob_text:
                 return dob_text, {"dob_text": dob_text}
+            legacy_dob_text = _run_legacy_dob_ocr(image)
+            if legacy_dob_text:
+                return legacy_dob_text, {"legacy_dob_text": legacy_dob_text}
             full_text = _run_paddle_ocr(image)
             return full_text, {"full_text": full_text}
 
@@ -337,6 +359,9 @@ def _run_ocr_with_debug(image_bytes):
         dob_text = _run_dob_ocr(image)
         if dob_text:
             return dob_text, {"dob_text": dob_text}
+        legacy_dob_text = _run_legacy_dob_ocr(image)
+        if legacy_dob_text:
+            return legacy_dob_text, {"legacy_dob_text": legacy_dob_text}
         image = _preprocess_image(image)
         config = "--oem 3 --psm 6"
         full_text = pytesseract.image_to_string(image, lang=OCR_LANGS, config=config)
@@ -349,6 +374,33 @@ def _run_ocr_with_debug(image_bytes):
 def verify():
     if MOCK_VERIFIED:
         return jsonify({"verified": True, "age": MIN_AGE, "source": "mock"})
+
+    dob_input = request.form.get("dob", "").strip()
+    if dob_input:
+        dob = None
+        try:
+            dob = datetime.fromisoformat(dob_input).date()
+        except Exception:
+            for pattern in DATE_PATTERNS:
+                match = re.search(pattern, dob_input)
+                if match:
+                    parsed = _parse_date_parts(match.groups())
+                    if isinstance(parsed, tuple):
+                        parsed = parsed[0]
+                    dob = parsed
+                    break
+        if not dob:
+            return jsonify({"verified": False, "error": "invalid_dob"}), 200
+        age = _calculate_age(dob)
+        verified = age >= MIN_AGE
+        return jsonify(
+            {
+                "verified": verified,
+                "age": age,
+                "dob": dob.isoformat(),
+                "source": "manual",
+            }
+        )
 
     if "id_image" not in request.files:
         return jsonify({"verified": False, "error": "missing_file"}), 400

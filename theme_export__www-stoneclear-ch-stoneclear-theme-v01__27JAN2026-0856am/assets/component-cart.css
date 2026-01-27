@@ -256,3 +256,6 @@ html[dir=ltr] .cart-notice__slider-bar {
 .idv-block__status--success {
   color: var(--color-accent-main, #1a7f37);
 }
+.idv-block__manual {
+  margin-top: 0.75rem;
+}

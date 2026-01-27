@@ -30,6 +30,23 @@
           <span class="button__text">{{ settings.id_verification_button_text }}</span>
         </button>
       </div>
+      <div class="idv-block__manual" data-idv-dob hidden>
+        <label class="text-size--small">Enter date of birth</label>
+        <div class="idv-block__controls">
+          <input
+            type="date"
+            class="idv-block__file"
+            data-idv-dob-input
+          >
+          <button
+            type="button"
+            class="button button--regular button--outline"
+            data-idv-dob-submit
+          >
+            <span class="button__text">Verify DOB</span>
+          </button>
+        </div>
+      </div>
       <p class="text-size--small idv-block__status" data-idv-status aria-live="polite"></p>
     </div>
   </div>
