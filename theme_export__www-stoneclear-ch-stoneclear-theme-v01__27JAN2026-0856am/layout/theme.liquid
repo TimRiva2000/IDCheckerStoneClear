@@ -260,16 +260,7 @@
             <script src="{{ 'component-cart-recommendations.js' | asset_url }}" defer></script>
           {%- endif -%}
   
-          {%- if settings.cart_notes_enable -%}
-            <div class="cart-instructions sidebar-large-padding hide-if-empty-cart"
-              style="border-top: 0;margin-top:-24px;"
-            >
-              <div class="form-field">
-                <label for="cartSpecialInstructions">{{ 'cart.note' | t }}</label>
-                <textarea name="note" id="cartSpecialInstructions" form="cart">{{ cart.note }}</textarea>
-              </div>
-            </div>
-          {%- endif -%}
+
   
         </div>
 

@@ -1,28 +1,22 @@
 services:
   - type: web
-    name: idv-ocr
+    name: idv-drive-upload
     env: docker
     rootDir: idv-backend
     plan: free
     dockerfilePath: Dockerfile
     envVars:
-      - key: MIN_AGE
-        value: "18"
-      - key: OCR_ENGINE
-        value: "paddle"
-      - key: OCR_LANGS
-        value: "eng"
-      - key: OCR_MAX_DIM
-        value: "1200"
-      - key: MRZ_CROP_RATIO
-        value: "0.35"
-      - key: DOB_CROP_RATIO
-        value: "0.55"
-      - key: DEBUG_OCR
-        value: "false"
       - key: MAX_UPLOAD_BYTES
-        value: "5242880"
+        value: "52428800"
       - key: CORS_ALLOWED_ORIGINS
         value: "*"
-      - key: MOCK_VERIFIED
+      - key: DRIVE_FOLDER_ID
+        value: ""
+      - key: DRIVE_SERVICE_ACCOUNT_JSON_BASE64
+        value: ""
+      - key: DRIVE_SHARED_DRIVE
         value: "false"
+      - key: DRIVE_PUBLIC
+        value: "true"
+      - key: DRIVE_FILENAME_PREFIX
+        value: "id-upload"

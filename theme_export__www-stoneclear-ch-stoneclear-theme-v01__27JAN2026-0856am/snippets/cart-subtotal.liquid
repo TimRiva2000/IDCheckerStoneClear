@@ -27,13 +27,6 @@
 
 	{%- endif -%}
 
-	{%- assign idv_enabled = settings.id_verification_enable -%}
-	{%- assign idv_verified = cart.attributes.id_verified | default: '' -%}
-	{%- assign idv_required = false -%}
-	{%- if idv_enabled and cart.item_count > 0 -%}
-		{%- assign idv_required = true -%}
-	{%- endif -%}
-
 	<div class="cart__details 
 		{% if type == 'page' %} cart__subtotal-widget element--has-border--body element--border-radius {% endif %}
 		{% if cart.item_count == 0 %} cart--empty {% endif %}
@@ -58,15 +51,6 @@
 		</div>
 
 
-		{%- if settings.cart_notes_enable and type == 'page' -%}
-			<div class="cart__instructions">
-				<div class="form-field">
-					<label for="cartSpecialInstructions">{{ 'cart.note' | t }}</label>
-					<textarea name="note" id="cartSpecialInstructions" form="cart">{{ cart.note }}</textarea>
-				</div>
-			</div>
-		{%- endif -%}
-
 		<div class="cart__shipping text-color--opacity text-size--small">
 			{%- liquid
 				if cart.taxes_included and shop.shipping_policy.body != blank
@@ -87,28 +71,14 @@
 					<span class="button__text">{{ 'cart.view_cart' | t }}</span>
 				</a>
 			{%- endunless -%}
-			<button
-				id="CheckOut"
-				class="button button--regular button--solid button--move"
-				type="submit"
-				name="checkout"
-				form="cart"
-				data-idv-checkout
-				{% if idv_required and idv_verified != 'true' %}disabled aria-disabled="true"{% endif %}
-			>
+			<button id="CheckOut" class="button button--regular button--solid button--move" type="submit" name="checkout" form="cart" data-idv-checkout>
 				<span class="button__text">{{ 'cart.checkout' | t }}</span>
 			</button>
 		</div>
 
-		{%- unless template contains 'order' -%}
+		{%- unless template contains 'order' -%}  
 			{%- if additional_checkout_buttons and settings.cart_additional_buttons -%}
-				<div
-					class="additional-checkout-buttons additional-checkout-buttons--vertical"
-					data-idv-additional
-					{% if idv_required and idv_verified != 'true' %}style="display:none"{% endif %}
-				>
-					{{ content_for_additional_checkout_buttons }}
-				</div>
+				<div class="additional-checkout-buttons additional-checkout-buttons--vertical" data-idv-additional>{{ content_for_additional_checkout_buttons }}</div>
 			{%- endif -%}
 		{%- endunless -%}
 

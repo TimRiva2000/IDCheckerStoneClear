@@ -1,53 +1,36 @@
 {%- if settings.id_verification_enable and cart.item_count > 0 -%}
-  {%- assign idv_verified = cart.attributes.id_verified | default: '' -%}
   <div
     class="idv-block cart-block element--has-border--body element--border-radius margin-top--regular"
-    data-idv-root
-    data-idv-verified="{% if idv_verified == 'true' %}true{% else %}false{% endif %}"
-    data-idv-endpoint="{{ settings.id_verification_endpoint | escape }}"
+    data-idv-block
+    data-idv-upload-url="{{ settings.id_verification_endpoint }}"
   >
-    <div class="cart-block__head">
-      <span>{{ settings.id_verification_title }}</span>
-    </div>
     <div class="cart-block__content">
-      <p class="text-size--small text-color--opacity idv-block__help" data-idv-help>
-        {{ settings.id_verification_help }}
+      <p class="text-size--small text-color--opacity idv-block__help">
+        Der Kauf unserer Produkte ist gesetzlich nur ab 18 Jahren erlaubt. Bitte lade ein Ausweisfoto zur Verifikation hoch, danach wird deine Bestellung freigegeben.
       </p>
       <div class="idv-block__controls">
         <input
+          id="idUpload"
           type="file"
           accept="image/*"
           class="idv-block__file"
+          form="cart"
           data-idv-file
-          aria-label="Upload ID"
         >
-        <button
-          type="button"
-          class="button button--regular button--solid"
-          data-idv-submit
-          disabled
+        <input
+          type="hidden"
+          name="properties[ID Upload]"
+          form="cart"
+          data-idv-url
+          value=""
         >
-          <span class="button__text">{{ settings.id_verification_button_text }}</span>
-        </button>
+        <label class="idv-block__button button button--regular button--outline" for="idUpload">
+          <span class="button__text">ID Hochladen</span>
+        </label>
+        <span class="idv-block__status idv-block__status--loading" data-idv-loading aria-live="polite">Hochladen...</span>
+        <span class="idv-block__success" data-idv-success aria-live="polite">Erfolgreich!</span>
+        <span class="idv-block__status idv-block__status--error" data-idv-error aria-live="polite"></span>
       </div>
-      <div class="idv-block__manual" data-idv-dob hidden>
-        <label class="text-size--small">Enter date of birth</label>
-        <div class="idv-block__controls">
-          <input
-            type="date"
-            class="idv-block__file"
-            data-idv-dob-input
-          >
-          <button
-            type="button"
-            class="button button--regular button--outline"
-            data-idv-dob-submit
-          >
-            <span class="button__text">Verify DOB</span>
-          </button>
-        </div>
-      </div>
-      <p class="text-size--small idv-block__status" data-idv-status aria-live="polite"></p>
     </div>
   </div>
 {%- endif -%}

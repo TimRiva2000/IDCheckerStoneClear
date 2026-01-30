@@ -1,6 +1,6 @@
 <cart-form id="AjaxCartForm">
 
-	<form action="{{ routes.cart_url }}" method="post" novalidate class="cart__form {% if cart.item_count == 0 %} cart--empty {% endif %}" id="cart">
+	<form action="{{ routes.cart_url }}" method="post" novalidate enctype="multipart/form-data" class="cart__form {% if cart.item_count == 0 %} cart--empty {% endif %}" id="cart">
 	
 		<div class="cart-holder 
 			{% if cart.item_count > 0 %} 
@@ -170,7 +170,15 @@
 
 		</div>
 
-		{%- render 'id-verification' -%}
+		{%- if settings.cart_notes_enable -%}
+			<div class="cart__instructions">
+				<div class="form-field">
+					<label for="cartSpecialInstructions">{{ 'cart.note' | t }}</label>
+					<textarea name="note" id="cartSpecialInstructions" form="cart">{{ cart.note }}</textarea>
+				</div>
+			</div>
+			{%- render 'id-verification' -%}
+		{%- endif -%}
 
 	</form>
 

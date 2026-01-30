@@ -15,7 +15,7 @@
 		<script src="{{ 'component-shipping-notice.js' | asset_url }}" defer></script>
 	{%- endif -%}
 
-	<form action="{{ routes.cart_url }}" method="post" novalidate class="cart__form {% if cart.item_count == 0 %} cart--empty {% endif %}" id="cart">
+	<form action="{{ routes.cart_url }}" method="post" novalidate enctype="multipart/form-data" class="cart__form {% if cart.item_count == 0 %} cart--empty {% endif %}" id="cart">
 	
 		<div class="cart-holder" data-items="{{ cart.items.size }}">
 			
@@ -143,9 +143,17 @@
 
 		</div>
 
-		{%- render 'id-verification' -%}
-
 	</form>
+
+	{%- if settings.cart_notes_enable and template != 'cart' -%}
+		<div class="cart-instructions sidebar-large-padding hide-if-empty-cart">
+			<div class="form-field">
+				<label for="cartSpecialInstructions">{{ 'cart.note' | t }}</label>
+				<textarea name="note" id="cartSpecialInstructions" form="cart">{{ cart.note }}</textarea>
+			</div>
+			{%- render 'id-verification' -%}
+		</div>
+	{%- endif -%}
 
 	<span class="cart__count hidden" aria-hidden="true" data-cart-count>{{ cart.item_count }}</span>
 	<span class="cart__total hidden" aria-hidden="true" data-cart-total>{{ cart.total_price | money }}</span>
