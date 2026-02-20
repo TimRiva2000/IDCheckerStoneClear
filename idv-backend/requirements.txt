@@ -1,6 +1,4 @@
 flask==3.0.2
 flask-cors==4.0.0
 gunicorn==21.2.0
-google-api-python-client==2.160.0
-google-auth==2.37.0
-google-auth-httplib2==0.2.0
+cloudinary==1.42.2

@@ -1,17 +1,14 @@
-import base64
-import io
-import json
+import logging
 import os
 import time
-from typing import Optional
 
+import cloudinary
+import cloudinary.uploader
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from google.oauth2 import service_account
-from googleapiclient.discovery import build
-from googleapiclient.http import MediaIoBaseUpload
 
 app = Flask(__name__)
+app.logger.setLevel(logging.INFO)
 
 max_bytes = int(os.getenv("MAX_UPLOAD_BYTES", "5242880"))
 app.config["MAX_CONTENT_LENGTH"] = max_bytes
@@ -19,39 +16,19 @@ app.config["MAX_CONTENT_LENGTH"] = max_bytes
 cors_origins = os.getenv("CORS_ALLOWED_ORIGINS", "*")
 CORS(app, resources={r"/upload": {"origins": cors_origins}})
 
-DRIVE_FOLDER_ID = os.getenv("DRIVE_FOLDER_ID", "").strip()
-DRIVE_SHARED_DRIVE = os.getenv("DRIVE_SHARED_DRIVE", "false").lower() in ("1", "true", "yes")
-DRIVE_PUBLIC = os.getenv("DRIVE_PUBLIC", "true").lower() in ("1", "true", "yes")
-DRIVE_FILENAME_PREFIX = os.getenv("DRIVE_FILENAME_PREFIX", "id-upload").strip() or "id-upload"
+CLOUDINARY_CLOUD_NAME = os.getenv("CLOUDINARY_CLOUD_NAME", "").strip()
+CLOUDINARY_API_KEY = os.getenv("CLOUDINARY_API_KEY", "").strip()
+CLOUDINARY_API_SECRET = os.getenv("CLOUDINARY_API_SECRET", "").strip()
+CLOUDINARY_FOLDER = os.getenv("CLOUDINARY_FOLDER", "id-uploads").strip() or "id-uploads"
+CLOUDINARY_FILENAME_PREFIX = os.getenv("CLOUDINARY_FILENAME_PREFIX", "id-upload").strip() or "id-upload"
 
-
-def _load_service_account_info() -> Optional[dict]:
-    raw = os.getenv("DRIVE_SERVICE_ACCOUNT_JSON", "").strip()
-    if raw:
-        try:
-            return json.loads(raw)
-        except json.JSONDecodeError:
-            return None
-
-    b64 = os.getenv("DRIVE_SERVICE_ACCOUNT_JSON_BASE64", "").strip()
-    if not b64:
-        return None
-    try:
-        decoded = base64.b64decode(b64).decode("utf-8")
-        return json.loads(decoded)
-    except Exception:
-        return None
-
-
-def _get_drive_service():
-    info = _load_service_account_info()
-    if not info:
-        raise RuntimeError("Missing or invalid service account JSON")
-    creds = service_account.Credentials.from_service_account_info(
-        info,
-        scopes=["https://www.googleapis.com/auth/drive"],
+if CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET:
+    cloudinary.config(
+        cloud_name=CLOUDINARY_CLOUD_NAME,
+        api_key=CLOUDINARY_API_KEY,
+        api_secret=CLOUDINARY_API_SECRET,
+        secure=True,
     )
-    return build("drive", "v3", credentials=creds)
 
 
 def _safe_filename(original: str) -> str:
@@ -59,7 +36,7 @@ def _safe_filename(original: str) -> str:
     if "." in original:
         suffix = "." + original.rsplit(".", 1)[1].lower()
     timestamp = int(time.time())
-    return f"{DRIVE_FILENAME_PREFIX}-{timestamp}{suffix or '.jpg'}"
+    return f"{CLOUDINARY_FILENAME_PREFIX}-{timestamp}{suffix or '.jpg'}"
 
 
 @app.get("/health")
@@ -69,57 +46,53 @@ def health():
 
 @app.post("/upload")
 def upload():
-    if not DRIVE_FOLDER_ID:
-        return jsonify({"error": "missing_drive_folder_id"}), 500
+    app.logger.info("Upload request received")
+
+    if not (CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET):
+        app.logger.error("Upload failed: Cloudinary env vars are missing")
+        return jsonify({"error": "missing_cloudinary_config"}), 500
 
     if "file" not in request.files:
+        app.logger.warning("Upload failed: file field missing in request")
         return jsonify({"error": "file_missing"}), 400
 
     uploaded = request.files["file"]
     if not uploaded or uploaded.filename == "":
+        app.logger.warning("Upload failed: empty filename")
         return jsonify({"error": "file_missing"}), 400
 
     filename = _safe_filename(uploaded.filename)
     mimetype = uploaded.mimetype or "image/jpeg"
-
-    media = MediaIoBaseUpload(
-        uploaded.stream,
-        mimetype=mimetype,
-        resumable=False,
+    app.logger.info(
+        "Processing upload: source_name=%s target_name=%s mimetype=%s",
+        uploaded.filename,
+        filename,
+        mimetype,
     )
 
-    metadata = {"name": filename, "parents": [DRIVE_FOLDER_ID]}
-
     try:
-        service = _get_drive_service()
-        file_create = service.files().create(
-            body=metadata,
-            media_body=media,
-            fields="id, webViewLink, webContentLink",
-            supportsAllDrives=DRIVE_SHARED_DRIVE,
-        ).execute()
+        upload_result = cloudinary.uploader.upload(
+            uploaded.stream,
+            folder=CLOUDINARY_FOLDER,
+            public_id=filename.rsplit(".", 1)[0],
+            resource_type="image",
+            overwrite=False,
+            use_filename=False,
+            unique_filename=True,
+        )
 
-        file_id = file_create.get("id")
+        public_id = upload_result.get("public_id")
+        url = upload_result.get("secure_url") or upload_result.get("url")
 
-        if DRIVE_PUBLIC and file_id:
-            service.permissions().create(
-                fileId=file_id,
-                body={"type": "anyone", "role": "reader"},
-                fields="id",
-                supportsAllDrives=DRIVE_SHARED_DRIVE,
-            ).execute()
-
-        url = file_create.get("webViewLink")
-        if not url and file_id:
-            url = f"https://drive.google.com/file/d/{file_id}/view"
-
+        app.logger.info("Upload success: public_id=%s", public_id)
         return jsonify({
             "ok": True,
-            "fileId": file_id,
+            "fileId": public_id,
             "url": url,
             "name": filename,
         })
     except Exception as exc:
+        app.logger.exception("Upload failed with exception")
         return jsonify({"error": "upload_failed", "detail": str(exc)}), 500
 
 
