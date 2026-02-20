@@ -669,7 +669,15 @@
                   id="add-to-cart-{{ section.id }}" class="product-form" {% if settings.cart_action == 'overlay' %} data-ajax-cart data-js-product-form {% endif %}
                 >
                   
-                  {%- form 'product', product, id: product_form_id, class: 'form', novalidate: 'novalidate', data-type: 'add-to-cart-form' -%}
+                  {%- form 'product', product, id: product_form_id, class: 'form', novalidate: 'novalidate', data-type: 'add-to-cart-form', enctype: 'multipart/form-data' -%}
+
+                    {%- liquid
+                      assign required_upload_tag = settings.required_upload_product_tag | strip
+                      assign requires_upload = false
+                      if required_upload_tag != blank and product.tags contains required_upload_tag
+                        assign requires_upload = true
+                      endif
+                    -%}
     
                     <template>
                       <input type="hidden" name="id" value="{{ current_variant.id }}">
@@ -683,6 +691,23 @@
                       render 'gift-card-recipent-form', product: product
                     endif
                     -%}
+
+                    {%- if requires_upload -%}
+                      <div class="form-field" style="margin-bottom:12px;" data-required-upload data-upload-endpoint="{{ settings.required_upload_endpoint | escape }}" data-upload-loading="{{ settings.required_upload_loading_text | escape }}" data-upload-success="{{ settings.required_upload_success_text | escape }}" data-upload-error="{{ settings.required_upload_error_text | escape }}">
+                        <label for="idUpload-{{ section.id }}">{{ settings.required_upload_field_label }}</label>
+                        <input
+                          id="idUpload-{{ section.id }}"
+                          type="file"
+                          name="id_upload_file"
+                          accept="image/*"
+                          data-required-upload-file
+                          required
+                        >
+                        <input type="hidden" name="properties[ID Upload]" value="" data-required-upload-value>
+                        <small class="text-size--small text-color--opacity">{{ settings.required_upload_help_text }}</small>
+                        <small class="text-size--small" data-required-upload-status></small>
+                      </div>
+                    {%- endif -%}
 
                     <div class="product__cart-functions">
     
@@ -740,6 +765,8 @@
   
                         {%- liquid
                           if product.gift_card? and block.settings.show_gift_card_recipient
+                            assign show_dynamic_checkout = false
+                          elsif requires_upload
                             assign show_dynamic_checkout = false
                           else 
                             assign show_dynamic_checkout = block.settings.show_dynamic_checkout

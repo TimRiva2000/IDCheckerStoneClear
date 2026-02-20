@@ -746,37 +746,55 @@
 			},
 			{
 				"type": "header",
-				"content": "ID verification"
-			},
-			{
-				"type": "checkbox",
-				"id": "id_verification_enable",
-				"label": "Require ID verification in cart",
-				"default": true
+				"content": "Required product upload"
 			},
 			{
 				"type": "text",
-				"id": "id_verification_endpoint",
-				"label": "ID verification endpoint",
-				"default": "https://your-domain.example/verify"
+				"id": "required_upload_product_tag",
+				"label": "Product tag requiring upload",
+				"default": "requires-id-upload"
 			},
 			{
 				"type": "text",
-				"id": "id_verification_title",
-				"label": "ID verification title",
-				"default": "Upload your ID"
+				"id": "required_upload_endpoint",
+				"label": "Upload endpoint",
+				"default": "https://idv-drive-upload.onrender.com/upload"
+			},
+			{
+				"type": "text",
+				"id": "required_upload_field_label",
+				"label": "Upload field label",
+				"default": "Ausweisfoto hochladen"
 			},
 			{
 				"type": "textarea",
-				"id": "id_verification_help",
-				"label": "ID verification help text",
-				"default": "Please upload a clear photo of your government-issued ID. You must be 18+ to proceed."
+				"id": "required_upload_help_text",
+				"label": "Upload help text",
+				"default": "Dieser Artikel erfordert ein Bild-Upload vor dem Hinzufuegen in den Warenkorb."
 			},
 			{
 				"type": "text",
-				"id": "id_verification_button_text",
-				"label": "ID verification button text",
-				"default": "Verify age"
+				"id": "required_upload_loading_text",
+				"label": "Loading text",
+				"default": "Bild wird hochgeladen..."
+			},
+			{
+				"type": "text",
+				"id": "required_upload_success_text",
+				"label": "Success text",
+				"default": "Upload erfolgreich"
+			},
+			{
+				"type": "text",
+				"id": "required_upload_error_text",
+				"label": "Error text",
+				"default": "Upload fehlgeschlagen. Bitte erneut versuchen."
+			},
+			{
+				"type": "textarea",
+				"id": "required_upload_missing_message",
+				"label": "Cart message when upload is missing",
+				"default": "Mindestens ein Artikel im Warenkorb benoetigt ein Bild. Bitte entferne ihn und fuege ihn ueber die Produktseite mit Upload erneut hinzu."
 			},
       {
         "type": "header",

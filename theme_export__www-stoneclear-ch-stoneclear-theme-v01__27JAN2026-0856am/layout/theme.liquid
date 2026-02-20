@@ -316,13 +316,13 @@
     <script src="{{ 'component-quantity-selector.js' | asset_url }}" defer></script>
     {%- if settings.cart_action == "overlay" or template.name contains "cart" -%}
       <script src="{{ 'component-cart.js' | asset_url }}" defer></script>
-      <script src="{{ 'component-id-verification.js' | asset_url }}" defer></script>
     {%- endif -%}
   
     <link rel="stylesheet" href="{{ 'component-sidebar.css' | asset_url }}" media="print" onload="this.media='all';">
     <script src="{{ 'section-header.js' | asset_url }}" defer></script>
   
     {%- if template contains 'product' -%}
+      <script src="{{ 'component-required-upload.js' | asset_url }}" defer></script>
       <script>
         if ( document.getElementById('shopify-product-reviews') ) {
           var element = document.createElement("link");

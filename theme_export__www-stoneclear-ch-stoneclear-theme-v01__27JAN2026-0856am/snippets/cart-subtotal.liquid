@@ -1,5 +1,18 @@
 <div id="AjaxCartSubtotal">
 
+	{%- liquid
+		assign required_upload_tag = settings.required_upload_product_tag | strip
+		assign missing_required_upload = false
+		if required_upload_tag != blank
+			for item in cart.items
+				if item.product.tags contains required_upload_tag and item.properties['ID Upload'] == blank
+					assign missing_required_upload = true
+					break
+				endif
+			endfor
+		endif
+	-%}
+
 	{%- if type == 'page' -%}
 
 		{%- if settings.cart_free_shipping -%}
@@ -71,14 +84,20 @@
 					<span class="button__text">{{ 'cart.view_cart' | t }}</span>
 				</a>
 			{%- endunless -%}
-			<button id="CheckOut" class="button button--regular button--solid button--move" type="submit" name="checkout" form="cart" data-idv-checkout>
+			<button id="CheckOut" class="button button--regular button--solid button--move" type="submit" name="checkout" form="cart" {% if missing_required_upload %}disabled="disabled" aria-disabled="true"{% endif %}>
 				<span class="button__text">{{ 'cart.checkout' | t }}</span>
 			</button>
 		</div>
 
+		{%- if missing_required_upload -%}
+			<div class="cart__shipping text-size--small" style="color:#b00000;margin-top:10px;">
+				{{ settings.required_upload_missing_message }}
+			</div>
+		{%- endif -%}
+
 		{%- unless template contains 'order' -%}  
-			{%- if additional_checkout_buttons and settings.cart_additional_buttons -%}
-				<div class="additional-checkout-buttons additional-checkout-buttons--vertical" data-idv-additional>{{ content_for_additional_checkout_buttons }}</div>
+			{%- if additional_checkout_buttons and settings.cart_additional_buttons and missing_required_upload == false -%}
+				<div class="additional-checkout-buttons additional-checkout-buttons--vertical">{{ content_for_additional_checkout_buttons }}</div>
 			{%- endif -%}
 		{%- endunless -%}
 
