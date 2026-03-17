@@ -20,3 +20,11 @@ services:
         value: "id-uploads"
       - key: CLOUDINARY_FILENAME_PREFIX
         value: "id-upload"
+      - key: VIEWER_BASE_URL
+        value: ""
+      - key: VIEWER_BASIC_AUTH_USERNAME
+        value: ""
+      - key: VIEWER_BASIC_AUTH_PASSWORD
+        value: ""
+      - key: VIEWER_TOKEN_SECRET
+        generateValue: true

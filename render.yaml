@@ -10,13 +10,21 @@ services:
         value: "52428800"
       - key: CORS_ALLOWED_ORIGINS
         value: "*"
-      - key: DRIVE_FOLDER_ID
+      - key: CLOUDINARY_CLOUD_NAME
         value: ""
-      - key: DRIVE_SERVICE_ACCOUNT_JSON_BASE64
+      - key: CLOUDINARY_API_KEY
         value: ""
-      - key: DRIVE_SHARED_DRIVE
-        value: "false"
-      - key: DRIVE_PUBLIC
-        value: "true"
-      - key: DRIVE_FILENAME_PREFIX
+      - key: CLOUDINARY_API_SECRET
+        value: ""
+      - key: CLOUDINARY_FOLDER
+        value: "id-uploads"
+      - key: CLOUDINARY_FILENAME_PREFIX
         value: "id-upload"
+      - key: VIEWER_BASE_URL
+        value: ""
+      - key: VIEWER_BASIC_AUTH_USERNAME
+        value: ""
+      - key: VIEWER_BASIC_AUTH_PASSWORD
+        value: ""
+      - key: VIEWER_TOKEN_SECRET
+        generateValue: true
