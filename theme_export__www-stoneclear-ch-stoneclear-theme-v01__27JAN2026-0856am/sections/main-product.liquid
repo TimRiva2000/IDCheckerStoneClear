@@ -686,7 +686,7 @@
 
                   {%- if requires_upload -%}
                     <div class="form-field" style="margin-bottom:12px;" data-required-upload data-upload-endpoint="{{ settings.required_upload_endpoint | escape }}" data-upload-loading="{{ settings.required_upload_loading_text | escape }}" data-upload-success="{{ settings.required_upload_success_text | escape }}" data-upload-error="{{ settings.required_upload_error_text | escape }}">
-                      <label for="idUpload-{{ section.id }}" style="color:#b00000;font-weight:700;">Ausweisfoto hochladen</label>
+                      <label for="idUpload-{{ section.id }}">{{ settings.required_upload_field_label }}</label>
                       <input
                         id="idUpload-{{ section.id }}"
                         type="file"
@@ -695,8 +695,8 @@
                         data-required-upload-file
                         required
                       >
-                      <input type="hidden" name="properties[_ID Upload]" value="" data-required-upload-value>
-                      <small class="text-size--small">Dieser Artikel erfordert ein Upload deiner ID vor dem Hinzufügen in den Warenkorb.</small>
+                      <input type="hidden" name="properties[ID Upload]" value="" data-required-upload-value>
+                      <small class="text-size--small text-color--opacity">{{ settings.required_upload_help_text }}</small>
                       <small class="text-size--small" data-required-upload-status></small>
                     </div>
                   {%- endif -%}

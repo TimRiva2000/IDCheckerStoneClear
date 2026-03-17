@@ -12,10 +12,6 @@
 - `CLOUDINARY_API_SECRET` (required)
 - `CLOUDINARY_FOLDER` (default: `id-uploads`)
 - `CLOUDINARY_FILENAME_PREFIX` (default: `id-upload`)
-- `VIEWER_BASE_URL` (recommended public backend base URL, e.g. `https://<your-service>.onrender.com`)
-- `VIEWER_BASIC_AUTH_USERNAME` (required for private image viewing)
-- `VIEWER_BASIC_AUTH_PASSWORD` (required for private image viewing)
-- `VIEWER_TOKEN_SECRET` (required; long random secret used to sign stored viewer links)
 
 ## Render deploy
 1. Create a new Render web service from this repo.
@@ -24,8 +20,6 @@
 4. Set Cloudinary env vars in Render.
 5. Copy the Render service URL and paste it into the theme setting `Upload endpoint` as:
    - `https://<your-service>.onrender.com/upload`
-6. Set `VIEWER_BASE_URL` to the same Render service URL.
-7. Set `VIEWER_BASIC_AUTH_USERNAME`, `VIEWER_BASIC_AUTH_PASSWORD`, and `VIEWER_TOKEN_SECRET`.
 
 ## Local run
 ```

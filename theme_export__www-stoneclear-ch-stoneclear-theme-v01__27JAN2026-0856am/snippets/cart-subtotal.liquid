@@ -1,20 +1,16 @@
 <div id="AjaxCartSubtotal">
 
 	{%- liquid
-			assign required_upload_tag = settings.required_upload_product_tag | strip
-			assign missing_required_upload = false
-			if required_upload_tag != blank
-				for item in cart.items
-					assign upload_value = item.properties['_ID Upload']
-					if upload_value == blank
-						assign upload_value = item.properties['ID Upload']
-					endif
-					if item.product.tags contains required_upload_tag and upload_value == blank
-						assign missing_required_upload = true
-						break
-					endif
-				endfor
-			endif
+		assign required_upload_tag = settings.required_upload_product_tag | strip
+		assign missing_required_upload = false
+		if required_upload_tag != blank
+			for item in cart.items
+				if item.product.tags contains required_upload_tag and item.properties['ID Upload'] == blank
+					assign missing_required_upload = true
+					break
+				endif
+			endfor
+		endif
 	-%}
 
 	{%- if type == 'page' -%}
@@ -82,22 +78,22 @@
 			-%}
 		</div>
 
-			{%- if missing_required_upload -%}
-				<div class="cart__shipping text-size--small" style="color:#b00000;margin-top:10px;">
-					Mindestens ein Artikel im Warenkorb benötigt ein upload deiner ID. Bitte entferne ihn und füge ihn über die Produktseite mit Upload erneut hinzu.
-				</div>
-			{%- endif -%}
+		<div {% unless template contains 'cart' %} class="flex-buttons" {% endunless %}>
+			{%- unless type == 'page' -%}
+				<a id="ViewCart" href="{{ routes.cart_url }}" class="button button--regular button--outline button--move">
+					<span class="button__text">{{ 'cart.view_cart' | t }}</span>
+				</a>
+			{%- endunless -%}
+			<button id="CheckOut" class="button button--regular button--solid button--move" type="submit" name="checkout" form="cart" {% if missing_required_upload %}disabled="disabled" aria-disabled="true"{% endif %}>
+				<span class="button__text">{{ 'cart.checkout' | t }}</span>
+			</button>
+		</div>
 
-			<div {% unless template contains 'cart' %} class="flex-buttons" {% endunless %}>
-				{%- unless type == 'page' -%}
-					<a id="ViewCart" href="{{ routes.cart_url }}" class="button button--regular button--outline button--move">
-						<span class="button__text">{{ 'cart.view_cart' | t }}</span>
-					</a>
-				{%- endunless -%}
-				<button id="CheckOut" class="button button--regular button--solid button--move" type="submit" name="checkout" form="cart" {% if missing_required_upload %}disabled="disabled" aria-disabled="true"{% endif %}>
-					<span class="button__text">{{ 'cart.checkout' | t }}</span>
-				</button>
+		{%- if missing_required_upload -%}
+			<div class="cart__shipping text-size--small" style="color:#b00000;margin-top:10px;">
+				{{ settings.required_upload_missing_message }}
 			</div>
+		{%- endif -%}
 
 		{%- unless template contains 'order' -%}  
 			{%- if additional_checkout_buttons and settings.cart_additional_buttons and missing_required_upload == false -%}
