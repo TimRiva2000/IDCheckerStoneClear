@@ -46,6 +46,7 @@ def health():
 
 @app.post("/upload")
 def upload():
+    request_started_at = time.perf_counter()
     app.logger.info("Upload request received")
 
     if not (CLOUDINARY_CLOUD_NAME and CLOUDINARY_API_KEY and CLOUDINARY_API_SECRET):
@@ -61,16 +62,19 @@ def upload():
         app.logger.warning("Upload failed: empty filename")
         return jsonify({"error": "file_missing"}), 400
 
+    file_ready_at = time.perf_counter()
     filename = _safe_filename(uploaded.filename)
     mimetype = uploaded.mimetype or "image/jpeg"
     app.logger.info(
-        "Processing upload: source_name=%s target_name=%s mimetype=%s",
+        "Processing upload: source_name=%s target_name=%s mimetype=%s request_parse_ms=%.1f",
         uploaded.filename,
         filename,
         mimetype,
+        (file_ready_at - request_started_at) * 1000,
     )
 
     try:
+        cloudinary_started_at = time.perf_counter()
         upload_result = cloudinary.uploader.upload(
             uploaded.stream,
             folder=CLOUDINARY_FOLDER,
@@ -83,8 +87,14 @@ def upload():
 
         public_id = upload_result.get("public_id")
         url = upload_result.get("secure_url") or upload_result.get("url")
+        finished_at = time.perf_counter()
 
-        app.logger.info("Upload success: public_id=%s", public_id)
+        app.logger.info(
+            "Upload success: public_id=%s cloudinary_ms=%.1f total_ms=%.1f",
+            public_id,
+            (finished_at - cloudinary_started_at) * 1000,
+            (finished_at - request_started_at) * 1000,
+        )
         return jsonify({
             "ok": True,
             "fileId": public_id,

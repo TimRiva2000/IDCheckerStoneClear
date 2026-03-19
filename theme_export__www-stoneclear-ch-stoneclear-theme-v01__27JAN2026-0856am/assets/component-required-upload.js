@@ -4,8 +4,10 @@
   const hiddenSelector = '[data-required-upload-value]';
   const statusSelector = '[data-required-upload-status]';
 
-  const MAX_DIMENSION = 1800;
-  const JPEG_QUALITY = 0.78;
+  const MAX_DIMENSION = 1200;
+  const JPEG_QUALITY = 0.7;
+  const SKIP_COMPRESSION_MAX_BYTES = 450 * 1024;
+  const SKIP_COMPRESSION_MAX_DIMENSION = 1400;
 
   const setStatus = (wrapper, text, color) => {
     const status = wrapper.querySelector(statusSelector);
@@ -14,7 +16,15 @@
     status.style.color = color || '';
   };
 
-  const readImage = (file) => {
+  const readImage = async (file) => {
+    if (typeof createImageBitmap === 'function') {
+      try {
+        return await createImageBitmap(file);
+      } catch (error) {
+        // Fall back to Image decoding below.
+      }
+    }
+
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
@@ -28,24 +38,51 @@
     });
   };
 
+  const closeImage = (image) => {
+    if (image && typeof image.close === 'function') {
+      image.close();
+    }
+  };
+
   const compressImage = async (file) => {
     if (!file.type.startsWith('image/')) return file;
 
     const image = await readImage(file);
-    const width = image.naturalWidth || image.width;
-    const height = image.naturalHeight || image.height;
+    const width = image.naturalWidth || image.width || 0;
+    const height = image.naturalHeight || image.height || 0;
 
-    if (!width || !height) return file;
+    if (
+      file.size <= SKIP_COMPRESSION_MAX_BYTES &&
+      Math.max(width, height) <= SKIP_COMPRESSION_MAX_DIMENSION
+    ) {
+      closeImage(image);
+      return file;
+    }
+
+    if (!width || !height) {
+      closeImage(image);
+      return file;
+    }
 
     const scale = Math.min(1, MAX_DIMENSION / Math.max(width, height));
     const targetWidth = Math.max(1, Math.round(width * scale));
     const targetHeight = Math.max(1, Math.round(height * scale));
 
+    if (targetWidth === width && targetHeight === height && file.size <= SKIP_COMPRESSION_MAX_BYTES * 1.5) {
+      closeImage(image);
+      return file;
+    }
+
     const canvas = document.createElement('canvas');
     canvas.width = targetWidth;
     canvas.height = targetHeight;
     const context = canvas.getContext('2d');
+    if (!context) {
+      closeImage(image);
+      return file;
+    }
     context.drawImage(image, 0, 0, targetWidth, targetHeight);
+    closeImage(image);
 
     const blob = await new Promise((resolve) => {
       canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY);
@@ -133,10 +170,11 @@
 
       uploading = true;
       toggleSubmit(form, true);
-      setStatus(wrapper, wrapper.dataset.uploadLoading || 'Bild wird hochgeladen...', '#8a6a00');
+      setStatus(wrapper, 'Bild wird vorbereitet...', '#8a6a00');
 
       try {
         const compressed = await compressImage(fileInput.files[0]);
+        setStatus(wrapper, wrapper.dataset.uploadLoading || 'Bild wird hochgeladen...', '#8a6a00');
         const url = await uploadFile(endpoint, compressed);
         hiddenInput.value = url;
         setStatus(wrapper, wrapper.dataset.uploadSuccess || 'Upload erfolgreich', '#1a7f37');
