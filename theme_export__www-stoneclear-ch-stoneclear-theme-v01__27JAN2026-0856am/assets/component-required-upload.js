@@ -4,10 +4,10 @@
   const hiddenSelector = '[data-required-upload-value]';
   const statusSelector = '[data-required-upload-status]';
 
-  const MAX_DIMENSION = 1200;
-  const JPEG_QUALITY = 0.7;
-  const SKIP_COMPRESSION_MAX_BYTES = 450 * 1024;
-  const SKIP_COMPRESSION_MAX_DIMENSION = 1400;
+  const MAX_DIMENSION = 1000;
+  const JPEG_QUALITY = 0.62;
+  const DIRECT_UPLOAD_MAX_BYTES = 1200 * 1024;
+  const SKIP_COMPRESSION_MAX_DIMENSION = 1800;
 
   const setStatus = (wrapper, text, color) => {
     const status = wrapper.querySelector(statusSelector);
@@ -26,15 +26,18 @@
     }
 
     return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => {
-        const image = new Image();
-        image.onload = () => resolve(image);
-        image.onerror = () => reject(new Error('invalid_image'));
-        image.src = reader.result;
+      const image = new Image();
+      const objectUrl = URL.createObjectURL(file);
+
+      image.onload = () => {
+        URL.revokeObjectURL(objectUrl);
+        resolve(image);
       };
-      reader.onerror = () => reject(new Error('read_failed'));
-      reader.readAsDataURL(file);
+      image.onerror = () => {
+        URL.revokeObjectURL(objectUrl);
+        reject(new Error('invalid_image'));
+      };
+      image.src = objectUrl;
     });
   };
 
@@ -47,14 +50,15 @@
   const compressImage = async (file) => {
     if (!file.type.startsWith('image/')) return file;
 
+    if (file.size <= DIRECT_UPLOAD_MAX_BYTES) {
+      return file;
+    }
+
     const image = await readImage(file);
     const width = image.naturalWidth || image.width || 0;
     const height = image.naturalHeight || image.height || 0;
 
-    if (
-      file.size <= SKIP_COMPRESSION_MAX_BYTES &&
-      Math.max(width, height) <= SKIP_COMPRESSION_MAX_DIMENSION
-    ) {
+    if (Math.max(width, height) <= SKIP_COMPRESSION_MAX_DIMENSION) {
       closeImage(image);
       return file;
     }
@@ -68,7 +72,7 @@
     const targetWidth = Math.max(1, Math.round(width * scale));
     const targetHeight = Math.max(1, Math.round(height * scale));
 
-    if (targetWidth === width && targetHeight === height && file.size <= SKIP_COMPRESSION_MAX_BYTES * 1.5) {
+    if (targetWidth === width && targetHeight === height) {
       closeImage(image);
       return file;
     }
