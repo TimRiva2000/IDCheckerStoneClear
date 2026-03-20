@@ -132,6 +132,49 @@
     return cartPromise;
   };
 
+  const refreshCart = async () => {
+    cartPromise = fetch('/cart.js', {
+      headers: {
+        'Accept': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
+    }).then((response) => response.json());
+
+    return cartPromise;
+  };
+
+  const getLineItemUploadUrl = (cart) => {
+    const items = Array.isArray(cart && cart.items) ? cart.items : [];
+    for (const item of items) {
+      const properties = item && item.properties ? item.properties : {};
+      const uploadUrl = (properties['ID Upload'] || properties['_ID Upload'] || '').trim();
+      if (uploadUrl) {
+        return uploadUrl;
+      }
+    }
+
+    return '';
+  };
+
+  const getReusableUploadUrl = (cart) => {
+    const attributes = cart && cart.attributes ? cart.attributes : {};
+    const attributeUploadUrl = (attributes[cartUploadAttribute] || '').trim();
+    if (attributeUploadUrl) {
+      return attributeUploadUrl;
+    }
+
+    return getLineItemUploadUrl(cart);
+  };
+
+  const clearCachedCartIfEmpty = (cart) => {
+    const itemCount = typeof cart?.item_count === 'number'
+      ? cart.item_count
+      : Array.isArray(cart?.items) ? cart.items.length : 0;
+    if (itemCount === 0 && !getReusableUploadUrl(cart)) {
+      cartPromise = Promise.resolve(cart);
+    }
+  };
+
   const setCartUploadAttribute = async (url) => {
     await fetch('/cart/update.js', {
       method: 'POST',
@@ -146,11 +189,14 @@
       })
     });
 
-    cartPromise = Promise.resolve({
-      attributes: {
-        [cartUploadAttribute]: url || ''
-      },
-      items: url ? [{}] : []
+    await refreshCart().catch(() => {
+      cartPromise = Promise.resolve({
+        attributes: {
+          [cartUploadAttribute]: url || ''
+        },
+        items: [],
+        item_count: 0
+      });
     });
   };
 
@@ -189,59 +235,77 @@
     if (!reuseActive) {
       fileInput.value = '';
     }
-
-    toggle.onclick = async () => {
-      hiddenInput.value = '';
-      setUploadUiMode(wrapper, hiddenInput, fileInput, false);
-      setStatus(wrapper, '', '');
-      await clearCartUploadAttribute().catch(() => {});
-      fileInput.click();
-    };
   };
 
-  const toggleSubmit = (form, disabled) => {
-    form.querySelectorAll('button[type="submit"]').forEach((button) => {
-      if (disabled) {
-        button.setAttribute('disabled', 'disabled');
-        button.setAttribute('aria-disabled', 'true');
-      } else {
-        button.removeAttribute('disabled');
-        button.setAttribute('aria-disabled', 'false');
-      }
+  const getWrapperParts = (wrapper) => {
+    const fileInput = wrapper.querySelector(fileSelector);
+    const hiddenInput = wrapper.querySelector(hiddenSelector);
+    const form = wrapper.closest('form');
+
+    if (!fileInput || !hiddenInput || !form) {
+      return null;
+    }
+
+    return { fileInput, hiddenInput, form };
+  };
+
+  const applyReuseState = (wrapper, uploadUrl) => {
+    const parts = getWrapperParts(wrapper);
+    if (!parts) return;
+
+    const { fileInput, hiddenInput } = parts;
+    const hasReusableUpload = Boolean(uploadUrl);
+    hiddenInput.value = hasReusableUpload ? uploadUrl : '';
+    setUploadUiMode(wrapper, hiddenInput, fileInput, hasReusableUpload);
+
+    if (hasReusableUpload) {
+      setStatus(wrapper, 'ID bereits fuer diesen Warenkorb hochgeladen.', '#1a7f37');
+    } else {
+      setStatus(wrapper, '', '');
+    }
+  };
+
+  const syncAllWrappers = (uploadUrl) => {
+    document.querySelectorAll(wrapperSelector).forEach((wrapper) => {
+      applyReuseState(wrapper, uploadUrl);
     });
+  };
+
+  const hydrateWrapperFromCart = async (wrapper, options = {}) => {
+    const cart = options.forceRefresh ? await refreshCart() : await getCart();
+    clearCachedCartIfEmpty(cart);
+    applyReuseState(wrapper, getReusableUploadUrl(cart));
+  };
+
+  const bindReplaceAction = (wrapper) => {
+    const parts = getWrapperParts(wrapper);
+    if (!parts) return;
+
+    const toggle = ensureReuseToggle(wrapper, parts.fileInput);
+    if (toggle.getAttribute('data-required-upload-toggle-bound') === 'true') return;
+    toggle.setAttribute('data-required-upload-toggle-bound', 'true');
+
+    toggle.onclick = async () => {
+      applyReuseState(wrapper, '');
+      await clearCartUploadAttribute().catch(() => {});
+      syncAllWrappers('');
+      parts.fileInput.click();
+    };
   };
 
   const bindWrapper = (wrapper) => {
     if (wrapper.getAttribute('data-required-upload-bound') === 'true') return;
     wrapper.setAttribute('data-required-upload-bound', 'true');
 
-    const fileInput = wrapper.querySelector(fileSelector);
-    const hiddenInput = wrapper.querySelector(hiddenSelector);
-    if (!fileInput || !hiddenInput) return;
+    const parts = getWrapperParts(wrapper);
+    if (!parts) return;
 
-    const form = wrapper.closest('form');
-    if (!form) return;
+    const { fileInput, hiddenInput, form } = parts;
+    bindReplaceAction(wrapper);
 
     let uploading = false;
 
-    getCart()
-      .then((cart) => {
-        const attributes = cart && cart.attributes ? cart.attributes : {};
-        const itemCount = Array.isArray(cart && cart.items) ? cart.items.length : 0;
-        const existingUploadUrl = (attributes[cartUploadAttribute] || '').trim();
-
-        if (itemCount === 0 && existingUploadUrl) {
-          clearCartUploadAttribute().catch(() => {});
-          return;
-        }
-
-        if (!existingUploadUrl) return;
-
-        hiddenInput.value = existingUploadUrl;
-        setUploadUiMode(wrapper, hiddenInput, fileInput, true);
-        setStatus(wrapper, 'ID bereits fuer diesen Warenkorb hochgeladen.', '#1a7f37');
-      })
-      .catch(() => {});
+    hydrateWrapperFromCart(wrapper, { forceRefresh: true }).catch(() => {});
 
     const validateForm = () => {
       if (uploading) {
@@ -250,7 +314,11 @@
       return hiddenInput.value !== '';
     };
 
-    form.addEventListener('submit', (event) => {
+    form.addEventListener('submit', async (event) => {
+      if (hiddenInput.value === '') {
+        await hydrateWrapperFromCart(wrapper, { forceRefresh: true }).catch(() => {});
+      }
+
       if (!validateForm()) {
         event.preventDefault();
         const message = wrapper.dataset.uploadError || 'Upload fehlgeschlagen. Bitte erneut versuchen.';
@@ -282,8 +350,7 @@
         setStatus(wrapper, wrapper.dataset.uploadLoading || 'Bild wird hochgeladen...', '#8a6a00');
         const url = await uploadFile(endpoint, compressed);
         await setCartUploadAttribute(url);
-        hiddenInput.value = url;
-        setUploadUiMode(wrapper, hiddenInput, fileInput, true);
+        syncAllWrappers(url);
         setStatus(wrapper, wrapper.dataset.uploadSuccess || 'Upload erfolgreich', '#1a7f37');
       } catch (error) {
         hiddenInput.value = '';
@@ -299,6 +366,42 @@
     document.querySelectorAll(wrapperSelector).forEach(bindWrapper);
   };
 
+  const observeDynamicUploads = () => {
+    if (document.body.getAttribute('data-required-upload-observer') === 'true') return;
+    document.body.setAttribute('data-required-upload-observer', 'true');
+
+    const observer = new MutationObserver((mutations) => {
+      for (const mutation of mutations) {
+        mutation.addedNodes.forEach((node) => {
+          if (!(node instanceof Element)) return;
+
+          if (node.matches?.(wrapperSelector)) {
+            bindWrapper(node);
+          }
+
+          node.querySelectorAll?.(wrapperSelector).forEach(bindWrapper);
+        });
+      }
+    });
+
+    observer.observe(document.body, {
+      childList: true,
+      subtree: true
+    });
+  };
+  const toggleSubmit = (form, disabled) => {
+    form.querySelectorAll('button[type="submit"]').forEach((button) => {
+      if (disabled) {
+        button.setAttribute('disabled', 'disabled');
+        button.setAttribute('aria-disabled', 'true');
+      } else {
+        button.removeAttribute('disabled');
+        button.setAttribute('aria-disabled', 'false');
+      }
+    });
+  };
+
   document.addEventListener('DOMContentLoaded', init);
   document.addEventListener('shopify:section:load', init);
+  observeDynamicUploads();
 })();
