@@ -3,11 +3,13 @@
   const fileSelector = '[data-required-upload-file]';
   const hiddenSelector = '[data-required-upload-value]';
   const statusSelector = '[data-required-upload-status]';
+  const cartUploadAttribute = 'ID Upload URL';
 
   const MAX_DIMENSION = 1000;
   const JPEG_QUALITY = 0.62;
   const DIRECT_UPLOAD_MAX_BYTES = 1200 * 1024;
   const SKIP_COMPRESSION_MAX_DIMENSION = 1800;
+  let cartPromise;
 
   const setStatus = (wrapper, text, color) => {
     const status = wrapper.querySelector(statusSelector);
@@ -117,6 +119,86 @@
     return data.url;
   };
 
+  const getCart = async () => {
+    if (!cartPromise) {
+      cartPromise = fetch('/cart.js', {
+        headers: {
+          'Accept': 'application/json',
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      }).then((response) => response.json());
+    }
+
+    return cartPromise;
+  };
+
+  const setCartUploadAttribute = async (url) => {
+    await fetch('/cart/update.js', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Requested-With': 'XMLHttpRequest'
+      },
+      body: JSON.stringify({
+        attributes: {
+          [cartUploadAttribute]: url || ''
+        }
+      })
+    });
+
+    cartPromise = Promise.resolve({
+      attributes: {
+        [cartUploadAttribute]: url || ''
+      },
+      items: url ? [{}] : []
+    });
+  };
+
+  const clearCartUploadAttribute = async () => {
+    await setCartUploadAttribute('');
+  };
+
+  const ensureReuseToggle = (wrapper, fileInput) => {
+    let toggle = wrapper.querySelector('[data-required-upload-toggle]');
+    if (toggle) return toggle;
+
+    toggle = document.createElement('button');
+    toggle.type = 'button';
+    toggle.textContent = 'Anderes Bild hochladen';
+    toggle.setAttribute('data-required-upload-toggle', 'true');
+    toggle.style.marginTop = '8px';
+    toggle.style.display = 'none';
+    fileInput.insertAdjacentElement('afterend', toggle);
+    return toggle;
+  };
+
+  const setUploadUiMode = (wrapper, hiddenInput, fileInput, reuseActive) => {
+    const toggle = ensureReuseToggle(wrapper, fileInput);
+    const label = wrapper.querySelector(`label[for="${fileInput.id}"]`);
+    const helpTexts = wrapper.querySelectorAll('small:not([data-required-upload-status])');
+
+    if (label) {
+      label.style.display = reuseActive ? 'none' : '';
+    }
+    fileInput.style.display = reuseActive ? 'none' : '';
+    helpTexts.forEach((node) => {
+      node.style.display = reuseActive ? 'none' : '';
+    });
+    toggle.style.display = reuseActive ? '' : 'none';
+
+    if (!reuseActive) {
+      fileInput.value = '';
+    }
+
+    toggle.onclick = async () => {
+      hiddenInput.value = '';
+      setUploadUiMode(wrapper, hiddenInput, fileInput, false);
+      setStatus(wrapper, '', '');
+      await clearCartUploadAttribute().catch(() => {});
+      fileInput.click();
+    };
+  };
+
   const toggleSubmit = (form, disabled) => {
     form.querySelectorAll('button[type="submit"]').forEach((button) => {
       if (disabled) {
@@ -141,6 +223,25 @@
     if (!form) return;
 
     let uploading = false;
+
+    getCart()
+      .then((cart) => {
+        const attributes = cart && cart.attributes ? cart.attributes : {};
+        const itemCount = Array.isArray(cart && cart.items) ? cart.items.length : 0;
+        const existingUploadUrl = (attributes[cartUploadAttribute] || '').trim();
+
+        if (itemCount === 0 && existingUploadUrl) {
+          clearCartUploadAttribute().catch(() => {});
+          return;
+        }
+
+        if (!existingUploadUrl) return;
+
+        hiddenInput.value = existingUploadUrl;
+        setUploadUiMode(wrapper, hiddenInput, fileInput, true);
+        setStatus(wrapper, 'ID bereits fuer diesen Warenkorb hochgeladen.', '#1a7f37');
+      })
+      .catch(() => {});
 
     const validateForm = () => {
       if (uploading) {
@@ -180,7 +281,9 @@
         const compressed = await compressImage(fileInput.files[0]);
         setStatus(wrapper, wrapper.dataset.uploadLoading || 'Bild wird hochgeladen...', '#8a6a00');
         const url = await uploadFile(endpoint, compressed);
+        await setCartUploadAttribute(url);
         hiddenInput.value = url;
+        setUploadUiMode(wrapper, hiddenInput, fileInput, true);
         setStatus(wrapper, wrapper.dataset.uploadSuccess || 'Upload erfolgreich', '#1a7f37');
       } catch (error) {
         hiddenInput.value = '';
