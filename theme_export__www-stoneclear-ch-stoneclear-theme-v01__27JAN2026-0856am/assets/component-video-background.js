@@ -10,6 +10,22 @@ if ( typeof VideoBackgroundElement !== 'function' ) {
       this._eventSuccess = new Event('success');
       this._eventFail = new Event('fail');
       const video = this.querySelector('video');
+      if (!video) return;
+
+      const loadVideo = () => {
+        video.querySelectorAll('source').forEach((elm) => {
+          if (elm.dataset && elm.dataset.src && elm.src !== elm.dataset.src) {
+            elm.src = elm.dataset.src;
+          }
+        });
+        video.load();
+        // Some browsers require an explicit play() call even with autoplay+muted.
+        const playPromise = video.play();
+        if (playPromise && typeof playPromise.catch === 'function') {
+          playPromise.catch(() => {});
+        }
+      };
+
       video.addEventListener('error', e=>{
         this.switchFallback();
       })
@@ -27,20 +43,18 @@ if ( typeof VideoBackgroundElement !== 'function' ) {
 
       const handleIntersection = (entries, observer) => {
         if (!entries[0].isIntersecting) return;
-        if ( ( entries[0].target.querySelector('video-background-element') && ! entries[0].target.querySelector('video-background-element').classList.contains('loaded') ) || ( entries[0].tagName == 'video-background-element') && ! entries[0].target.classList.contains('loaded') ) {
-          video.querySelectorAll('source').forEach(elm=>{
-            elm.src = elm.dataset.src;
-          });
-          video.load();
+        const target = entries[0].target;
+        if (
+          (target.querySelector && target.querySelector('video-background-element') && !target.querySelector('video-background-element').classList.contains('loaded')) ||
+          (target.tagName && target.tagName.toLowerCase() == 'video-background-element' && !target.classList.contains('loaded'))
+        ) {
+          loadVideo();
         }
         observer.unobserve(this);
       }
 
       if ( this.getBoundingClientRect().y < window.innerHeight || this.parentNode.getBoundingClientRect().y < window.innerHeight ) {
-        video.querySelectorAll('source').forEach(elm=>{
-          elm.src = elm.dataset.src;
-        });
-        video.load();
+        loadVideo();
       } else {
         new IntersectionObserver(handleIntersection.bind(this), {rootMargin: `0px 0px 400px 0px`}).observe(this);
         new IntersectionObserver(handleIntersection.bind(this), {rootMargin: `0px 0px 400px 0px`}).observe(this.parentElement);
