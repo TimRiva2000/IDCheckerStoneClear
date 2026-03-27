@@ -108,9 +108,9 @@
 
               <video-background-element class="lazy-image lazy-image--background" data-id="{{ block.id }}">
 
-                <video autoplay muted loop playsinline>
+                <video autoplay muted loop playsinline preload="metadata">
                   {%- for source in block.settings.video.sources -%}
-                    <source data-src="{{ source.url }}" type="{{ source.mime_type }}">
+                    <source src="{{ source.url }}" type="{{ source.mime_type }}">
                   {%- endfor -%}
                 </video>
                 
